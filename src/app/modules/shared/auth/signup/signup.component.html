@@ -1,0 +1,48 @@
+<div class="bg">
+  <div class="parent">
+    <div class="child">
+      <div class="imgDiv">
+        <h1 class="page-title">Sign Up</h1>
+      </div>
+
+    <form nz-form [formGroup]="validateForm" (ngSubmit)="submitForm()" class="login-form">
+      <!-- Email Field -->
+      <nz-form-item>
+        <nz-form-control nzHasFeedback [nzErrorTip]="'The input is not valid E-mail!'">
+          <input nz-input placeholder="E-mail" formControlName="email" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Password Field -->
+      <nz-form-item>
+        <nz-form-control nzHasFeedback [nzErrorTip]="'The input is not valid Password!'">
+          <input nz-input placeholder="Password" type="password" formControlName="password" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Name Field -->
+      <nz-form-item>
+        <nz-form-control nzHasFeedback [nzErrorTip]="'The input is not valid Name!'">
+          <input nz-input placeholder="Name" formControlName="name" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Submit Button -->
+      <div class="submit-section">
+        <button
+          nz-button
+          class="login-form-button login-form-margin"
+          [nzType]="'primary'"
+          htmlType="submit"
+        >
+          Register
+        </button>
+      </div>
+    </form>
+    <!-- Login Link -->
+    <div class="login-link">
+          Or <a (click)="goToLogin()" >Log in now!</a>
+    </div>
+  </div>
+</div>
+

@@ -1,0 +1,59 @@
+<div class="question-form-container">
+  <h2>Add a Question</h2>
+  <form [formGroup]="questionForm" (ngSubmit)="onSubmit()">
+  <div class="form-group">
+    <label>Question Title *</label>
+    <input nz-input formControlName="questionText" placeholder="Enter your question (minimum 10 characters)" />
+    <div class="error" *ngIf="isInvalid('questionText')">
+      <span *ngIf="questionForm.get('questionText')?.errors?.['required']">Question text is required</span>
+      <span *ngIf="questionForm.get('questionText')?.errors?.['minlength']">Question must be at least 10 characters long</span>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>Option A *</label>
+    <input nz-input formControlName="optionA" placeholder="Enter Option A" />
+    <div class="error" *ngIf="isInvalid('optionA')">Option A is required</div>
+  </div>
+
+  <div class="form-group">
+    <label>Option B *</label>
+    <input nz-input formControlName="optionB" placeholder="Enter Option B" />
+    <div class="error" *ngIf="isInvalid('optionB')">Option B is required</div>
+  </div>
+
+  <div class="form-group">
+    <label>Option C *</label>
+    <input nz-input formControlName="optionC" placeholder="Enter Option C" />
+    <div class="error" *ngIf="isInvalid('optionC')">Option C is required</div>
+  </div>
+
+  <div class="form-group">
+    <label>Option D *</label>
+    <input nz-input formControlName="optionD" placeholder="Enter Option D" />
+    <div class="error" *ngIf="isInvalid('optionD')">Option D is required</div>
+  </div>
+
+  <div class="form-group">
+    <label>Correct Answer *</label>
+    <nz-select nz-select formControlName="correctAnswer" nzPlaceHolder="Select the correct answer">
+      <nz-option nzValue="A" nzLabel="Option A"></nz-option>
+      <nz-option nzValue="B" nzLabel="Option B"></nz-option>
+      <nz-option nzValue="C" nzLabel="Option C"></nz-option>
+      <nz-option nzValue="D" nzLabel="Option D"></nz-option>
+    </nz-select>
+    <div class="error" *ngIf="isInvalid('correctAnswer')">Please select the correct answer</div>
+    <div class="help-text">⚠️ Select which option (A, B, C, or D) contains the correct answer. The actual text of the selected option will be sent to the backend.</div>
+  </div>
+
+  <div class="form-actions">
+    <button nz-button nzType="primary" [disabled]="questionForm.invalid" type="submit">
+      Add Question
+    </button>
+    <button nz-button nzType="default" type="button" (click)="goBack()">
+      Cancel
+    </button>
+  </div>
+</form>
+
+</div>

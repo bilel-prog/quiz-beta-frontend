@@ -1,0 +1,33 @@
+<div class="questions-grid"> <div class="question-card" *ngFor="let question of questions"> <h3 class="question-text">{{ question.questionText }}</h3>
+<div
+  class="option"
+  [ngClass]="{ correct: question.correctAnswer === 'A' }"
+>
+  <span class="label">A.</span> {{ question.optionA }}
+  <span class="check-icon" *ngIf="question.correctAnswer === 'A'">✔</span>
+</div>
+
+<div
+  class="option"
+  [ngClass]="{ correct: question.correctAnswer === 'B' }"
+>
+  <span class="label">B.</span> {{ question.optionB }}
+  <span class="check-icon" *ngIf="question.correctAnswer === 'B'">✔</span>
+</div>
+
+<div
+  class="option"
+  [ngClass]="{ correct: question.correctAnswer === 'C' }"
+>
+  <span class="label">C.</span> {{ question.optionC }}
+  <span class="check-icon" *ngIf="question.correctAnswer === 'C'">✔</span>
+</div>
+
+<div
+  class="option"
+  [ngClass]="{ correct: question.correctAnswer === 'D' }"
+>
+  <span class="label">D.</span> {{ question.optionD }}
+  <span class="check-icon" *ngIf="question.correctAnswer === 'D'">✔</span>
+</div>
+</div> </div>

@@ -1,0 +1,396 @@
+// Modern Test Results Component Styles
+.results-container {
+  min-height: 100vh;
+  background: var(--background);
+  transition: background-color var(--transition-normal);
+}
+
+// Page Header
+.page-header {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  
+  .header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .page-title {
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    margin: 0 0 var(--spacing-sm) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    
+    .title-icon {
+      font-size: 36px;
+      animation: bounce 2s infinite;
+    }
+  }
+  
+  .page-subtitle {
+    font-size: var(--font-size-lg);
+    opacity: 0.9;
+    margin: 0;
+    font-weight: 300;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
+}
+
+// Loading State
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  
+  .loading-placeholder {
+    width: 200px;
+    height: 200px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+  }
+}
+
+// Results Content
+.results-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  
+  @media (max-width: 768px) {
+    padding: 0 var(--spacing-md);
+  }
+}
+
+// Statistics Grid
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-2xl);
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
+}
+
+.stat-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-elevated);
+  transition: all var(--transition-normal);
+  overflow: hidden;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+  }
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary);
+  }
+  
+  ::ng-deep .ant-statistic {
+    .ant-statistic-title {
+      font-size: var(--font-size-sm);
+      color: var(--on-surface-variant);
+      font-weight: 500;
+      margin-bottom: var(--spacing-xs);
+    }
+    
+    .ant-statistic-content {
+      font-size: var(--font-size-2xl);
+      font-weight: 700;
+      
+      .ant-statistic-content-value {
+        color: var(--on-surface);
+      }
+      
+      .ant-statistic-content-prefix {
+        margin-right: var(--spacing-xs);
+        font-size: var(--font-size-lg);
+      }
+      
+      .ant-statistic-content-suffix {
+        font-size: var(--font-size-lg);
+        color: var(--on-surface-variant);
+      }
+    }
+  }
+}
+
+// Results Table Card
+.results-table-card {
+  margin-bottom: var(--spacing-xl);
+  
+  .card-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0 0 var(--spacing-lg) 0;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    
+    .card-icon {
+      color: var(--primary);
+    }
+  }
+}
+
+// Modern Table Styles
+.modern-table {
+  ::ng-deep {
+    .ant-table {
+      background: transparent;
+      
+      .ant-table-container {
+        border-radius: var(--radius-md);
+        overflow: hidden;
+      }
+      
+      .ant-table-thead > tr > th {
+        background: var(--surface-variant);
+        border-bottom: 2px solid var(--border);
+        color: var(--on-surface);
+        font-weight: 600;
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-md);
+        
+        span[nz-icon] {
+          margin-right: var(--spacing-xs);
+          color: var(--primary);
+        }
+      }
+      
+      .ant-table-tbody > tr {
+        transition: all var(--transition-fast);
+        animation: slideInUp 0.5s ease-out;
+        
+        &:hover {
+          background: var(--surface-hover);
+          transform: translateX(4px);
+          box-shadow: 4px 0 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        > td {
+          border-bottom: 1px solid var(--divider);
+          padding: var(--spacing-md);
+          vertical-align: middle;
+        }
+      }
+    }
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Table Cell Styles
+.test-name-cell {
+  .test-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+  
+  .test-title {
+    font-weight: 600;
+    color: var(--on-surface);
+    font-size: var(--font-size-md);
+  }
+  
+  .test-subtitle {
+    font-size: var(--font-size-xs);
+    color: var(--on-surface-variant);
+    font-style: italic;
+  }
+}
+
+.score-display {
+  font-weight: 600;
+  color: var(--on-surface);
+  font-size: var(--font-size-md);
+}
+
+.percentage-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  
+  .percentage-text {
+    font-weight: 600;
+    font-size: var(--font-size-sm);
+  }
+  
+  ::ng-deep .ant-progress {
+    .ant-progress-outer {
+      width: 100px;
+    }
+  }
+}
+
+.grade-tag {
+  font-weight: 700;
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+}
+
+.date-cell {
+  .date-text {
+    font-size: var(--font-size-xs);
+    color: var(--on-surface-variant);
+    font-weight: 500;
+  }
+}
+
+.text-center {
+  text-align: center;
+}
+
+// Empty State
+.empty-state-card {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  
+  ::ng-deep .ant-empty {
+    .ant-empty-description {
+      color: var(--on-surface-variant);
+      font-size: var(--font-size-md);
+      margin: var(--spacing-lg) 0;
+    }
+    
+    .ant-empty-footer {
+      margin-top: var(--spacing-xl);
+      
+      .ant-btn {
+        height: 48px;
+        padding: 0 var(--spacing-xl);
+        font-size: var(--font-size-md);
+        font-weight: 600;
+        border-radius: var(--radius-lg);
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: var(--shadow-lg);
+        }
+      }
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .page-header {
+    padding: var(--spacing-xl) var(--spacing-md);
+    
+    .page-title {
+      font-size: var(--font-size-2xl);
+    }
+  }
+  
+  .stats-grid {
+    gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: var(--spacing-lg) var(--spacing-sm);
+    
+    .page-title {
+      font-size: var(--font-size-xl);
+      flex-direction: column;
+      text-align: center;
+      gap: var(--spacing-sm);
+    }
+    
+    .page-subtitle {
+      font-size: var(--font-size-md);
+      text-align: center;
+    }
+  }
+  
+  .results-content {
+    padding: 0 var(--spacing-sm);
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .modern-table {
+    ::ng-deep .ant-table {
+      .ant-table-thead > tr > th {
+        padding: var(--spacing-sm);
+        font-size: var(--font-size-xs);
+        
+        span:not([nz-icon]) {
+          display: none;
+        }
+      }
+      
+      .ant-table-tbody > tr > td {
+        padding: var(--spacing-sm);
+        font-size: var(--font-size-xs);
+      }
+    }
+  }
+  
+  .test-name-cell {
+    .test-subtitle {
+      display: none;
+    }
+  }
+  
+  .percentage-cell {
+    ::ng-deep .ant-progress .ant-progress-outer {
+      width: 60px;
+    }
+    
+    .percentage-text {
+      font-size: var(--font-size-xs);
+    }
+  }
+}
+
+// Animation delay classes for staggered animations
+.stat-card-1 {
+  animation-delay: 0.1s;
+}
+
+.stat-card-2 {
+  animation-delay: 0.2s;
+}

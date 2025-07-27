@@ -1,0 +1,56 @@
+.bg {
+  background: var(--background);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.parent {
+  width: 100%;
+  max-width: 600px;
+  padding: 40px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+.child {
+  width: 100%; // ou 100% selon l’effet voulu
+}
+
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+nz-form-item {
+  margin-bottom: 0;
+}
+
+.login-form-button {
+  width: 100%;
+  background: var(--primary);
+  color: var(--text-primary);
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  
+  &:hover {
+    background: var(--primary-hover);
+  }
+}
+.description-textarea {
+  min-height: 50px;
+  max-width: 300px;
+  min-width: 300px;
+  
+  resize: vertical;
+  // Permet à l'utilisateur d'ajuster la hauteur s'il le souhaite
+}

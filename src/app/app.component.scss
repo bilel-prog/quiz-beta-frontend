@@ -1,0 +1,303 @@
+// Modern App Component Styles with Design System
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  transition: background-color var(--transition-normal);
+}
+
+// Modern Header Styles
+.modern-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--surface-elevated);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(20px);
+  transition: all var(--transition-normal), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateY(0);
+  
+  &.header-hidden {
+    transform: translateY(-100%);
+  }
+  
+  &.authenticated {
+    background: var(--surface-elevated);
+  }
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  
+  @media (max-width: 768px) {
+    padding: 0 var(--spacing-md);
+    height: 60px;
+  }
+}
+
+// Logo Section
+.logo-section {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  text-decoration: none;
+  color: var(--on-surface);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin: 0;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  
+  &:hover {
+    transform: translateY(-1px);
+    color: var(--primary);
+  }
+}
+
+.logo-icon {
+  font-size: 28px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.logo-text {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+// Navigation Section
+.nav-section {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  
+  @media (max-width: 768px) {
+    gap: var(--spacing-sm);
+  }
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: var(--on-surface);
+  font-weight: 500;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left var(--transition-normal);
+  }
+  
+  &:hover {
+    background: var(--surface-hover);
+    transform: translateY(-2px);
+    color: var(--primary);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &.active {
+    background: var(--primary-light);
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  &.primary {
+    background: var(--primary);
+    color: var(--on-primary);
+    
+    &:hover {
+      background: var(--primary-hover);
+      color: var(--on-primary);
+      box-shadow: var(--shadow-md);
+    }
+  }
+  
+  span[nz-icon] {
+    font-size: 16px;
+  }
+  
+  @media (max-width: 768px) {
+    span:not([nz-icon]) {
+      display: none;
+    }
+    
+    padding: var(--spacing-sm);
+    min-width: 40px;
+    justify-content: center;
+  }
+}
+
+// User Menu
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: var(--spacing-md);
+  padding-left: var(--spacing-md);
+  border-left: 1px solid var(--border);
+  
+  // Theme toggle integration
+  app-theme-toggle {
+    margin-right: var(--spacing-xs);
+  }
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-md);
+  background: var(--surface-variant);
+  
+  @media (max-width: 768px) {
+    .user-name {
+      display: none;
+    }
+  }
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.user-name {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--on-surface-variant);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  
+  &:hover {
+    background: var(--error);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+// Main Content
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 70px);
+  padding-top: 70px; // Compensate for fixed header
+  
+  @media (max-width: 768px) {
+    min-height: calc(100vh - 60px);
+    padding-top: 60px; // Compensate for mobile header height
+  }
+}
+
+// Floating Theme Toggle
+.theme-toggle-fab {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-lg);
+  z-index: 1000;
+  
+  @media (max-width: 768px) {
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
+  }
+}
+
+.fab-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: var(--on-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-normal);
+  font-size: 20px;
+  
+  &:hover {
+    transform: translateY(-4px) scale(1.1);
+    box-shadow: var(--shadow-xl);
+    background: var(--primary-hover);
+  }
+  
+  &:active {
+    transform: translateY(-2px) scale(1.05);
+  }
+  
+  span[nz-icon] {
+    animation: rotateIcon 0.3s ease;
+  }
+}
+
+@keyframes rotateIcon {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg) scale(1.2); }
+  100% { transform: rotate(360deg); }
+}
+
+// Legacy header styles for backward compatibility
+.main-header {
+  display: none; // Hide old header
+}

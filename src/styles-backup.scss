@@ -1,0 +1,12 @@
+// Minimal Modern Design System
+:root {
+  --primary: #6366f1;
+  --background: #ffffff;
+  --text: #1a1a1a;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--background);
+  color: var(--text);
+}

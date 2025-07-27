@@ -1,0 +1,199 @@
+<div class="take-test-container">
+  <!-- Test Header -->
+  <div class="test-header" *ngIf="testData">
+    <div class="container">
+      <div class="header-content">
+        <div class="test-info-row">
+          <div class="test-info">
+            <h1 class="test-title text-3xl font-bold text-primary mb-2">{{ testData.title }}</h1>
+            <p class="test-description text-secondary mb-6">{{ testData.description }}</p>
+          </div>
+          
+          <!-- Timer Section -->
+          <div class="timer-section" *ngIf="timeRemaining > 0 && !isTestCompleted">
+            <div class="timer-display" [ngClass]="getTimerClass()">
+              <div class="timer-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12,6 12,12 16,14"/>
+                </svg>
+              </div>
+              <div class="timer-text">
+                <span class="timer-label">Time Remaining</span>
+                <span class="timer-value">{{ getFormattedTime() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Progress Section -->
+        <div class="progress-section">
+          <div class="progress-info flex justify-between items-center mb-2">
+            <span class="text-sm text-secondary">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span>
+            <span class="text-sm text-secondary">{{ getProgressPercentage() }}% Complete</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="container">
+      <div class="loading-card card p-8 text-center">
+        <div class="loading-spinner"></div>
+        <p class="text-secondary">Loading test questions...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Question Section -->
+  <div *ngIf="!isLoading && getCurrentQuestion()" class="question-container">
+    <div class="container">
+      <div class="question-card card p-8">
+        <!-- Question Text -->
+        <h2 class="question-text text-xl font-semibold mb-8 text-primary">
+          {{ getCurrentQuestion()?.questionText }}
+        </h2>
+
+        <!-- Options -->
+        <div class="options-grid">
+          <div 
+            class="option-card"
+            [ngClass]="{ 
+              'selected': isAnswerSelected(getCurrentQuestion()!.id, 'A'),
+              'correct': isTestCompleted && getCurrentQuestion()?.correctAnswer === 'A',
+              'incorrect': isTestCompleted && isAnswerSelected(getCurrentQuestion()!.id, 'A') && getCurrentQuestion()?.correctAnswer !== 'A'
+            }"
+            (click)="selectAnswer(getCurrentQuestion()!.id, 'A')">
+            <div class="option-indicator">
+              <span class="option-letter">A</span>
+            </div>
+            <span class="option-text">{{ getCurrentQuestion()?.optionA }}</span>
+          </div>
+
+          <div 
+            class="option-card"
+            [ngClass]="{ 
+              'selected': isAnswerSelected(getCurrentQuestion()!.id, 'B'),
+              'correct': isTestCompleted && getCurrentQuestion()?.correctAnswer === 'B',
+              'incorrect': isTestCompleted && isAnswerSelected(getCurrentQuestion()!.id, 'B') && getCurrentQuestion()?.correctAnswer !== 'B'
+            }"
+            (click)="selectAnswer(getCurrentQuestion()!.id, 'B')">
+            <div class="option-indicator">
+              <span class="option-letter">B</span>
+            </div>
+            <span class="option-text">{{ getCurrentQuestion()?.optionB }}</span>
+          </div>
+
+          <div 
+            class="option-card"
+            [ngClass]="{ 
+              'selected': isAnswerSelected(getCurrentQuestion()!.id, 'C'),
+              'correct': isTestCompleted && getCurrentQuestion()?.correctAnswer === 'C',
+              'incorrect': isTestCompleted && isAnswerSelected(getCurrentQuestion()!.id, 'C') && getCurrentQuestion()?.correctAnswer !== 'C'
+            }"
+            (click)="selectAnswer(getCurrentQuestion()!.id, 'C')">
+            <div class="option-indicator">
+              <span class="option-letter">C</span>
+            </div>
+            <span class="option-text">{{ getCurrentQuestion()?.optionC }}</span>
+          </div>
+
+          <div 
+            class="option-card"
+            [ngClass]="{ 
+              'selected': isAnswerSelected(getCurrentQuestion()!.id, 'D'),
+              'correct': isTestCompleted && getCurrentQuestion()?.correctAnswer === 'D',
+              'incorrect': isTestCompleted && isAnswerSelected(getCurrentQuestion()!.id, 'D') && getCurrentQuestion()?.correctAnswer !== 'D'
+            }"
+            (click)="selectAnswer(getCurrentQuestion()!.id, 'D')">
+            <div class="option-indicator">
+              <span class="option-letter">D</span>
+            </div>
+            <span class="option-text">{{ getCurrentQuestion()?.optionD }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="navigation-section">
+        <div class="nav-buttons flex justify-between items-center">
+          <button 
+            class="btn btn-secondary"
+            [disabled]="currentQuestionIndex === 0"
+            (click)="previousQuestion()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+            Previous
+          </button>
+
+          <!-- Question indicators -->
+          <div class="question-indicators flex gap-2">
+            <div 
+              *ngFor="let question of questions; let i = index"
+              class="question-dot"
+              [ngClass]="{
+                'current': i === currentQuestionIndex,
+                'answered': selectedAnswers[question.id] !== undefined,
+                'unanswered': selectedAnswers[question.id] === undefined
+              }"
+              (click)="goToQuestion(i)">
+              {{ i + 1 }}
+            </div>
+          </div>
+
+          <button 
+            class="btn btn-primary"
+            *ngIf="currentQuestionIndex < questions.length - 1"
+            (click)="nextQuestion()">
+            Next
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+
+          <button 
+            class="btn btn-primary"
+            *ngIf="currentQuestionIndex === questions.length - 1"
+            (click)="confirmSubmit()"
+            [disabled]="isTestCompleted">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            {{ isTestCompleted ? 'Test Submitted' : 'Submit Test' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && questions.length === 0" class="empty-container">
+    <div class="container">
+      <div class="empty-card card p-8 text-center">
+        <div class="empty-icon mb-4">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14,2 14,8 20,8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+            <polyline points="10,9 9,9 8,9"/>
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold mb-2">No questions available</h3>
+        <p class="text-secondary mb-6">This test doesn't have any questions yet.</p>
+        <button class="btn btn-primary" (click)="goBackToDashboard()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+          Back to Dashboard
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

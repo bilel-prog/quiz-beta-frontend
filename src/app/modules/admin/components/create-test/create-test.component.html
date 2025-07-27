@@ -1,0 +1,39 @@
+<div class="bg">
+  <div class="parent">
+    <form nz-form [formGroup]="testForm" class="login-form" (ngSubmit)="onSubmit()">
+
+      <!-- Title -->
+      <nz-form-item>
+        <nz-form-label [nzSpan]="6" [nzNoColon]="true">Title:</nz-form-label>
+        <nz-form-control [nzSpan]="18" nzErrorTip="This input is required!">
+          <input type="text" nz-input formControlName="title" placeholder="Title" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Time -->
+      <nz-form-item>
+        <nz-form-label [nzSpan]="6" [nzNoColon]="true">Time/Question:</nz-form-label>
+        <nz-form-control [nzSpan]="18" nzErrorTip="This input has to be a positive number!">
+          <input type="number" nz-input formControlName="timePerQuestion" placeholder="Time Seconds Per Question" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Description -->
+      <nz-form-item>
+        <nz-form-label [nzSpan]="6" [nzNoColon]="true">Description:</nz-form-label>
+        <nz-form-control [nzSpan]="18" nzErrorTip="This input is required!">
+          <textarea rows="4" nz-input formControlName="description" placeholder="Description" class="description-textarea"></textarea>
+        </nz-form-control>
+      </nz-form-item>
+
+      <!-- Submit -->
+      <nz-form-item>
+        <nz-form-control [nzSpan]="18" [nzOffset]="6">
+          <button nz-button class="login-form-button" [disabled]="!testForm.valid">Submit</button>
+        </nz-form-control>
+      </nz-form-item>
+
+    </form>
+  </div>
+</div>
+ 
