@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://your-render-app-name.onrender.com'
+  apiUrl: 'https://quizserver-t0oo.onrender.com'
 };
