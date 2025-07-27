@@ -1,5 +1,5 @@
 [build]
-  publish = "dist/quiz-web"
+  publish = "dist/quizWeb/browser"
   command = "npm run build"
 
 [[redirects]]
