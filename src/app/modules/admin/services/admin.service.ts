@@ -28,6 +28,10 @@ export class AdminService {
     return this.http.get(BASIC_URL+'api/admin/tests', { headers: this.getAuthHeaders() });
   }
   
+  getAllTestsPaged(page: number, size: number): Observable<any> {
+    return this.http.get(`${BASIC_URL}api/admin/tests/paged?page=${page}&size=${size}`, { headers: this.getAuthHeaders() });
+  }
+  
   addQuestionInTest(questionDto):Observable<any>{
     return this.http.post(BASIC_URL+'api/admin/test/question', questionDto, { headers: this.getAuthHeaders() });
   }
@@ -35,8 +39,16 @@ export class AdminService {
   getTestQuestions(id: number): Observable<any> {
     return this.http.get(`${BASIC_URL}api/admin/test/${id}`, { headers: this.getAuthHeaders() });
   }
+  
+  getTestQuestionsPaged(id: number, page: number, size: number): Observable<any> {
+    return this.http.get(`${BASIC_URL}api/admin/test/${id}/questions/paged?page=${page}&size=${size}`, { headers: this.getAuthHeaders() });
+  }
 
   getTestResults():Observable<any>{
     return this.http.get(BASIC_URL+'api/admin/test-results', { headers: this.getAuthHeaders() });
+  }
+  
+  getTestResultsPaged(page: number, size: number): Observable<any> {
+    return this.http.get(`${BASIC_URL}api/admin/test-results/paged?page=${page}&size=${size}`, { headers: this.getAuthHeaders() });
   }
 }

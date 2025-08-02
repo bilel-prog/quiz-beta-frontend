@@ -1,5 +1,10 @@
 <div class="results-container">
-  <nz-table #basicTable [nzData]="results">
+  <nz-table 
+    #basicTable 
+    [nzData]="results" 
+    [nzFrontPagination]="false" 
+    [nzShowPagination]="false"
+    [nzLoading]="loading">
     <thead>
       <tr>
         <th>Test Name</th>
@@ -10,7 +15,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let data of basicTable.data">
+      <tr *ngFor="let data of results">
         <td>{{ data.testName }}</td>
         <td>{{ data.userName }}</td>
         <td>{{ data.totalQuestions }}</td>
@@ -19,4 +24,13 @@
       </tr>
     </tbody>
   </nz-table>
+  
+  <!-- Pagination -->
+  <app-pagination
+    [total]="totalResults"
+    [pageSize]="pageSize"
+    [currentPage]="pageIndex"
+    (pageChange)="onPageChange($event)"
+    (pageSizeChange)="onPageSizeChange($event)">
+  </app-pagination>
 </div>

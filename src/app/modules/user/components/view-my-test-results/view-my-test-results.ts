@@ -1,3 +1,4 @@
+import { NzPaginationModule } from 'ng-zorro-antd/pagination';
 import { Component, OnInit } from '@angular/core';
 import { SharedModule } from '../../../shared/shared-module';
 import { Test } from '../../services/test'; 
@@ -26,13 +27,51 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
     NzStatisticModule,
     NzProgressModule,
     NzTagModule,
-    NzEmptyModule
+    NzEmptyModule,
+    NzPaginationModule
   ],
   templateUrl: './view-my-test-results.html',
   styleUrl: './view-my-test-results.scss'
 })
 export class ViewMyTestResults implements OnInit {
+  // Score summary properties
+  get averageScore(): number {
+    if (!this.dataSet.length) return 0;
+    const total = this.dataSet.reduce((sum, r) => sum + this.getScorePercentage(r), 0);
+    return Math.round(total / this.dataSet.length);
+  }
+  get bestScore(): number {
+    if (!this.dataSet.length) return 0;
+    return Math.max(...this.dataSet.map(r => this.getScorePercentage(r)));
+  }
+  getScorePercentage(result: any): number {
+    if (result.score && result.score > 1 && result.score <= 100) {
+      return Math.round(result.score);
+    }
+    if (result.correctAnswers !== undefined && result.totalQuestions) {
+      return Math.round((result.correctAnswers / result.totalQuestions) * 100);
+    }
+    if (result.score !== undefined && result.totalQuestions) {
+      return Math.round((result.score / result.totalQuestions) * 100);
+    }
+    if (result.score && result.score <= 1) {
+      return Math.round(result.score * 100);
+    }
+    return 0;
+  }
+  getCorrectAnswersCount(result: any): number {
+    return result.correctAnswers || 0;
+  }
+  getScoreColor(percentage: number): string {
+    if (percentage >= 80) return '#52c41a';
+    if (percentage >= 50) return '#faad14';
+    return '#f5222d';
+  }
+  // Pagination state
+  pageIndex = 1;
+  pageSize = 5;
   dataSet: any[] = [];
+  totalResults = 0;
   loading = true;
   
   constructor(private testService: Test) {}
@@ -43,10 +82,18 @@ export class ViewMyTestResults implements OnInit {
 
   getMyTestResults(): void {
     this.loading = true;
-    this.testService.getMyTestResults().subscribe({
-      next: (data: any) => {
-        this.dataSet = data || [];
-        console.log('My Test Results:', this.dataSet);
+    this.testService.getMyTestResultsPaged(this.pageIndex - 1, this.pageSize).subscribe({
+      next: (response: any) => {
+        console.log('Response received:', response); // Debug log
+        if (Array.isArray(response)) {
+          this.dataSet = response;
+          this.totalResults = response.length;
+          console.log('Array response - totalResults:', this.totalResults); // Debug log
+        } else {
+          this.dataSet = response.content || [];
+          this.totalResults = response.totalElements || this.dataSet.length;
+          console.log('Object response - content:', this.dataSet.length, 'totalElements:', this.totalResults); // Debug log
+        }
         this.loading = false;
       },
       error: (error) => {
@@ -54,94 +101,18 @@ export class ViewMyTestResults implements OnInit {
         this.loading = false;
       }
     });
+
   }
 
-  getScorePercentage(result: any): number {
-    console.log('Calculating percentage for result:', result);
-    
-    // If score is already a percentage (0-100), return it directly
-    if (result.score && result.score > 1 && result.score <= 100) {
-      return Math.round(result.score);
-    }
-    
-    // If we have correctAnswers and totalQuestions, calculate percentage
-    if (result.correctAnswers !== undefined && result.totalQuestions) {
-      return Math.round((result.correctAnswers / result.totalQuestions) * 100);
-    }
-    
-    // If we have score (0-1) and totalQuestions, calculate percentage
-    if (result.score !== undefined && result.totalQuestions) {
-      return Math.round((result.score / result.totalQuestions) * 100);
-    }
-    
-    // If score is a decimal (0-1), convert to percentage
-    if (result.score && result.score <= 1) {
-      return Math.round(result.score * 100);
-    }
-    
-    console.warn('Could not calculate percentage for result:', result);
-    return 0;
+  updatePagedResults(): void {
+    // Method removed, backend handles paging
   }
 
-  getCorrectAnswersCount(result: any): number {
-    // If we have correctAnswers directly, use it
-    if (result.correctAnswers !== undefined) {
-      return result.correctAnswers;
-    }
-    
-    // If score is a percentage and we have totalQuestions, calculate correct answers
-    if (result.score && result.totalQuestions) {
-      if (result.score > 1) {
-        // Score is percentage (0-100)
-        return Math.round((result.score / 100) * result.totalQuestions);
-      } else {
-        // Score is decimal (0-1)
-        return Math.round(result.score * result.totalQuestions);
-      }
-    }
-    
-    return 0;
+  onPageChange(page: number): void {
+    this.pageIndex = page;
+    this.getMyTestResults();
   }
-
-  getScoreColor(percentage: number): string {
-    if (percentage >= 80) return '#52c41a';
-    if (percentage >= 60) return '#faad14';
-    return '#f5222d';
-  }
-
-  getGradeLetter(percentage: number): string {
-    if (percentage >= 90) return 'A';
-    if (percentage >= 80) return 'B';
-    if (percentage >= 70) return 'C';
-    if (percentage >= 60) return 'D';
-    return 'F';
-  }
-
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }
-
-  getFormattedDate(dateString: string | undefined): string {
-    if (!dateString) {
-      return this.getCurrentDate();
-    }
-    return this.formatDate(dateString);
-  }
-
-  get averageScore(): number {
-    if (!this.dataSet || this.dataSet.length === 0) return 0;
-    const total = this.dataSet.reduce((sum, item) => sum + this.getScorePercentage(item), 0);
-    return Math.round((total / this.dataSet.length) * 10) / 10;
-  }
-
-  get bestScore(): number {
-    if (!this.dataSet || this.dataSet.length === 0) return 0;
-    return Math.max(...this.dataSet.map(item => this.getScorePercentage(item)));
-  }
+  // ...existing code...
 
   getCurrentDate(): string {
     return new Date().toLocaleDateString('en-US', {

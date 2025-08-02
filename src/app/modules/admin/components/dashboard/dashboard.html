@@ -41,7 +41,7 @@
       <!-- Stats Summary -->
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-value">{{ tests.length }}</div>
+          <div class="stat-value">{{ getTotalAvailableTests() }}</div>
           <div class="stat-label">Total Tests</div>
         </div>
         <div class="stat-card">
@@ -103,6 +103,15 @@
           </div>
         </nz-card>
       </div>
+      
+      <!-- Pagination -->
+      <app-pagination
+        [total]="totalTests"
+        [pageSize]="pageSize"
+        [currentPage]="pageIndex"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
     </div>
   </div>
 </div>

@@ -394,3 +394,41 @@
 .stat-card-2 {
   animation-delay: 0.2s;
 }
+
+// Pagination Styles
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-lg);
+  padding: var(--spacing-md) 0;
+  
+  ::ng-deep .ant-pagination {
+    .ant-pagination-item {
+      border-radius: var(--border-radius);
+      
+      &:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+      
+      &.ant-pagination-item-active {
+        background: var(--primary);
+        border-color: var(--primary);
+        
+        a {
+          color: white;
+        }
+      }
+    }
+    
+    .ant-pagination-prev,
+    .ant-pagination-next {
+      border-radius: var(--border-radius);
+      
+      &:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+    }
+  }
+}

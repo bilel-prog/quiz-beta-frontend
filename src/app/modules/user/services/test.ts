@@ -21,16 +21,25 @@ export class Test {
   }
   
   getAllTest(): Observable<any> {
-    return this.http.get(BASE_URL + 'api/user/tests', { headers: this.getAuthHeaders() });
+    // Get all tests with a large page size to get complete stats
+    return this.http.get(`${BASE_URL}api/user/tests?page=0&size=1000`, { headers: this.getAuthHeaders() });
+  }
+  
+  getAllTestsPaged(page: number, size: number): Observable<any> {
+    return this.http.get(`${BASE_URL}api/user/tests?page=${page}&size=${size}`, { headers: this.getAuthHeaders() });
   }
   
   getTestQuestions(id: number): Observable<any> {
     return this.http.get(`${BASE_URL}api/user/test/${id}`, { headers: this.getAuthHeaders() });
   }
   
-  getMyTestResults(): Observable<any> {
+  getFullTestQuestions(id: number): Observable<any> {
+    return this.http.get(`${BASE_URL}api/user/test/${id}/full`, { headers: this.getAuthHeaders() });
+  }
+  
+  getMyTestResultsPaged(page: number, size: number): Observable<any> {
     const userId = UserStorageService.getUserId();
-    return this.http.get(`${BASE_URL}api/user/results/${userId}`, { headers: this.getAuthHeaders() });
+    return this.http.get(`${BASE_URL}api/user/results/${userId}?page=${page}&size=${size}`, { headers: this.getAuthHeaders() });
   }
   
   submitTest(testId: number, responses: any[], score?: number): Observable<any> {

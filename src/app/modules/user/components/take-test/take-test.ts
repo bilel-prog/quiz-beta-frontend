@@ -57,6 +57,10 @@ export class TakeTest implements OnInit, OnDestroy {
     this.testId = +this.activatedRoute.snapshot.params['id'];
     this.storageKey = `test_${this.testId}_progress`;
     
+    // Debug: Check for any existing localStorage data
+    console.log('Starting test ID:', this.testId);
+    console.log('Existing localStorage keys:', Object.keys(localStorage).filter(key => key.includes('test_')));
+    
     if (this.testId) {
       this.loadTestQuestions();
     } else {
@@ -67,13 +71,24 @@ export class TakeTest implements OnInit, OnDestroy {
 
   loadTestQuestions(): void {
     this.isLoading = true;
-    this.testService.getTestQuestions(this.testId).subscribe({
-      next: (data: TestData) => {
+    this.testService.getFullTestQuestions(this.testId).subscribe({
+      next: (data: any) => {
         console.log("Fetched test data:", data);
-        this.testData = data;
-        this.questions = data.questions || [];
+        // Always set testData and questions from backend response
+        if (Array.isArray(data)) {
+          this.questions = data;
+          this.testData = { id: this.testId, title: '', description: '', timePerQuestion: 60, questions: data };
+        } else if (data && Array.isArray(data.questions)) {
+          this.questions = data.questions;
+          this.testData = data;
+        } else {
+          this.questions = [];
+          this.testData = { id: this.testId, title: '', description: '', timePerQuestion: 60, questions: [] };
+        }
         this.isLoading = false;
-        
+        // Debug: log questions array and length before warning
+        console.log("Questions array after fetch:", this.questions);
+        console.log("Questions length:", this.questions.length);
         if (this.questions.length === 0) {
           this.message.warning('No questions found for this test');
           this.router.navigate(['/user/dashboard']);
@@ -81,8 +96,12 @@ export class TakeTest implements OnInit, OnDestroy {
         }
 
         // Initialize timer with persistence
-        this.initializeTimer(data);
+        this.initializeTimer(this.testData);
         this.loadSavedAnswers();
+        
+        // Debug: Log current question IDs and any existing answers
+        console.log('Question IDs:', this.questions.map(q => q.id));
+        console.log('Loaded answers:', this.selectedAnswers);
       },
       error: (error) => {
         console.error('Error fetching test questions:', error);
@@ -132,8 +151,39 @@ export class TakeTest implements OnInit, OnDestroy {
     const savedAnswers = localStorage.getItem(answersKey);
     
     if (savedAnswers) {
-      this.selectedAnswers = JSON.parse(savedAnswers);
-      this.userAnswers = { ...this.selectedAnswers };
+      try {
+        const parsedAnswers = JSON.parse(savedAnswers);
+        console.log('Loading saved answers:', parsedAnswers); // Debug log
+        
+        // Clear current answers first
+        this.selectedAnswers = {};
+        this.userAnswers = {};
+        
+        // Only keep answers for current question IDs and validate they exist
+        this.questions.forEach(q => {
+          if (parsedAnswers[q.id]) {
+            // Validate the saved answer is one of the valid options
+            const savedAnswer = parsedAnswers[q.id];
+            if (['A', 'B', 'C', 'D'].includes(savedAnswer)) {
+              this.selectedAnswers[q.id] = savedAnswer;
+              this.userAnswers[q.id] = savedAnswer;
+              console.log(`Restored answer for question ${q.id}: ${savedAnswer}`); // Debug log
+            }
+          }
+        });
+        
+        console.log('Final loaded answers:', this.selectedAnswers); // Debug log
+      } catch (error) {
+        console.error('Error parsing saved answers:', error);
+        // Clear corrupted data
+        localStorage.removeItem(answersKey);
+        this.selectedAnswers = {};
+        this.userAnswers = {};
+      }
+    } else {
+      // Initialize empty if no saved data
+      this.selectedAnswers = {};
+      this.userAnswers = {};
     }
   }
 
@@ -143,9 +193,33 @@ export class TakeTest implements OnInit, OnDestroy {
   }
 
   selectAnswer(questionId: number, selectedOption: string): void {
+    console.log(`Selecting answer for question ${questionId}: ${selectedOption}`); // Debug log
+    
+    // Validate the selection
+    if (!['A', 'B', 'C', 'D'].includes(selectedOption)) {
+      console.error('Invalid option selected:', selectedOption);
+      return;
+    }
+    
+    // Always use actual backend questionId
     this.selectedAnswers[questionId] = selectedOption;
-    this.userAnswers[questionId] = selectedOption; // Keep both for compatibility
-    this.saveAnswers(); // Save to localStorage
+    this.userAnswers[questionId] = selectedOption;
+    this.saveAnswers();
+    
+    console.log('Updated selectedAnswers:', this.selectedAnswers); // Debug log
+  }
+
+  clearTestData(): void {
+    // Clear localStorage for this test
+    const answersKey = `test_answers_${this.testId}`;
+    localStorage.removeItem(answersKey);
+    const progressKey = `test_${this.testId}_progress`;
+    localStorage.removeItem(progressKey);
+    
+    // Reset component state
+    this.selectedAnswers = {};
+    this.userAnswers = {};
+    console.log('Cleared test data for test ID:', this.testId);
   }
 
   goToQuestion(index: number): void {
@@ -178,14 +252,20 @@ export class TakeTest implements OnInit, OnDestroy {
     }
 
     // Prepare comprehensive responses format for backend
-    const responses = this.questions.map((question, index) => {
-      const selectedLetter = this.selectedAnswers[question.id]; // Use question.id, not index
-      
+    const responses = this.questions.map((question) => {
+      // Use the actual question.id from backend and the selected answer for that question
       return {
         questionId: question.id,
-        selectedOption: selectedLetter || '' // Send the letter (A, B, C, D) to match backend logic
+        selectedOption: this.selectedAnswers[question.id] || ''
       };
     });
+    // Debug: Log mapping of question IDs and selected answers
+    console.log('Mapped responses:', responses);
+    // Extra debug: log all question IDs and selectedAnswers keys
+    console.log('All question IDs:', this.questions.map(q => q.id));
+    console.log('Selected answers object:', this.selectedAnswers);
+    // Force testId from testData or fallback to route param
+    const testId = this.testData?.id || this.testId;
 
     // Debug: Log question structure and answers
     console.log('=== DEBUGGING SCORE CALCULATION ===');
@@ -221,14 +301,14 @@ export class TakeTest implements OnInit, OnDestroy {
     
     console.log('=== BACKEND PAYLOAD ===');
     console.log('Sending to backend:', JSON.stringify({
-      testId: this.testData.id,
+      testId: testId,
       userId: UserStorageService.getUserId(),
       responses: responses
     }, null, 2));
     console.log('========================');
     
     // Submit to backend
-    this.testService.submitTest(this.testData.id, responses, score).subscribe({
+    this.testService.submitTest(testId, responses, score).subscribe({
       next: (result) => {
         console.log('Test submitted successfully:', result);
         this.isLoading = false;

@@ -1,140 +1,51 @@
-<!-- Modern Test Results Dashboard -->
-<div class="results-container">
-
-  <!-- Loading State -->
-  <div class="loading-container" *ngIf="loading">
-    <nz-spin nzSize="large" nzTip="Loading your test results...">
-      <div class="loading-placeholder"></div>
-    </nz-spin>
+<nz-card class="results-table-card modern-card" *ngIf="dataSet && dataSet.length > 0">
+  <h3 class="card-title">
+    <span nz-icon nzType="table" class="card-icon"></span>
+    Detailed Results
+  </h3>
+  <nz-table [nzData]="dataSet" [nzSize]="'middle'" class="modern-table" [nzFrontPagination]="false" [nzShowPagination]="false">
+    <thead>
+      <tr>
+        <th nzWidth="40%"><span nz-icon nzType="book"></span>Test Name</th>
+        <th nzWidth="20%"><span nz-icon nzType="question-circle"></span>Questions</th>
+        <th nzWidth="20%"><span nz-icon nzType="check-circle"></span>Score</th>
+        <th nzWidth="20%"><span nz-icon nzType="percentage"></span>Percentage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let result of dataSet; let i = index" class="table-row" [style.animation-delay]="(i * 0.05) + 's'">
+        <td class="test-name-cell">
+          <div class="test-info">
+            <span class="test-title">{{ result.testName || result.test?.name || 'Unnamed Test' }}</span>
+            <span class="test-subtitle" *ngIf="result.test?.description">{{ result.test.description }}</span>
+          </div>
+        </td>
+        <td class="text-center">
+          <nz-tag nzColor="blue">{{ result.totalQuestions || result.test?.questions?.length || 0 }}</nz-tag>
+        </td>
+        <td class="text-center">
+          <span class="score-display">{{ getCorrectAnswersCount(result) }} / {{ result.totalQuestions || result.test?.questions?.length || 0 }}</span>
+        </td>
+        <td class="text-center">
+          <div class="percentage-cell">
+            <nz-progress [nzPercent]="getScorePercentage(result)" [nzStrokeColor]="getScoreColor(getScorePercentage(result))" nzSize="small" [nzShowInfo]="false"></nz-progress>
+            <span class="percentage-text" [style.color]="getScoreColor(getScorePercentage(result))">{{ getScorePercentage(result) }}%</span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+  
+  <!-- Pagination Controls -->
+  <div class="pagination-container" *ngIf="totalResults > pageSize">
+    <nz-pagination 
+      [(nzPageIndex)]="pageIndex"
+      [nzTotal]="totalResults" 
+      [nzPageSize]="pageSize"
+      [nzShowSizeChanger]="false"
+      (nzPageIndexChange)="onPageChange($event)"
+      nzShowQuickJumper>
+    </nz-pagination>
   </div>
-
-  <!-- Results Content -->
-  <div class="results-content animate-slide-in-left" *ngIf="!loading">
-    
-    <!-- Statistics Summary -->
-    <div class="stats-grid" *ngIf="dataSet && dataSet.length > 0">
-      <nz-card class="stat-card animate-scale-in">
-        <nz-statistic 
-          [nzValue]="dataSet.length" 
-          nzTitle="Tests Completed"
-          [nzPrefix]="'📊'"
-          [nzValueStyle]="{ color: 'var(--primary)' }">
-        </nz-statistic>
-      </nz-card>
-      
-      <nz-card class="stat-card animate-scale-in stat-card-1">
-        <nz-statistic 
-          [nzValue]="averageScore" 
-          nzTitle="Average Score"
-          nzSuffix="%"
-          [nzPrefix]="'🎯'"
-          [nzValueStyle]="{ color: 'var(--success)' }">
-        </nz-statistic>
-      </nz-card>
-      
-      <nz-card class="stat-card animate-scale-in stat-card-2">
-        <nz-statistic 
-          [nzValue]="bestScore" 
-          nzTitle="Best Score"
-          nzSuffix="%"
-          [nzPrefix]="'🏆'"
-          [nzValueStyle]="{ color: 'var(--warning)' }">
-        </nz-statistic>
-      </nz-card>
-    </div>
-
-    <!-- Results Table -->
-    <nz-card class="results-table-card modern-card" *ngIf="dataSet && dataSet.length > 0">
-      <h3 class="card-title">
-        <span nz-icon nzType="table" class="card-icon"></span>
-        Detailed Results
-      </h3>
-      
-      <nz-table 
-        #resultsTable 
-        [nzData]="dataSet" 
-        [nzSize]="'middle'"
-        [nzPageSize]="10"
-        [nzShowPagination]="dataSet.length > 10"
-        class="modern-table">
-        
-        <thead>
-          <tr>
-            <th nzWidth="40%">
-              <span nz-icon nzType="book"></span>
-              Test Name
-            </th>
-            <th nzWidth="20%">
-              <span nz-icon nzType="question-circle"></span>
-              Questions
-            </th>
-            <th nzWidth="20%">
-              <span nz-icon nzType="check-circle"></span>
-              Score
-            </th>
-            <th nzWidth="20%">
-              <span nz-icon nzType="percentage"></span>
-              Percentage
-            </th>
-          </tr>
-        </thead>
-        
-        <tbody>
-          <tr *ngFor="let result of resultsTable.data; let i = index" 
-              class="table-row"
-              [style.animation-delay]="(i * 0.05) + 's'">
-            
-            <td class="test-name-cell">
-              <div class="test-info">
-                <span class="test-title">{{ result.testName || result.test?.name || 'Unnamed Test' }}</span>
-                <span class="test-subtitle" *ngIf="result.test?.description">
-                  {{ result.test.description }}
-                </span>
-              </div>
-            </td>
-            
-            <td class="text-center">
-              <nz-tag nzColor="blue">
-                {{ result.totalQuestions || result.test?.questions?.length || 0 }}
-              </nz-tag>
-            </td>
-            
-            <td class="text-center">
-              <span class="score-display">
-                {{ getCorrectAnswersCount(result) }} / {{ result.totalQuestions || result.test?.questions?.length || 0 }}
-              </span>
-            </td>
-            
-            <td class="text-center">
-              <div class="percentage-cell">
-                <nz-progress 
-                  [nzPercent]="getScorePercentage(result)"
-                  [nzStrokeColor]="getScoreColor(getScorePercentage(result))"
-                  nzSize="small"
-                  [nzShowInfo]="false">
-                </nz-progress>
-                <span class="percentage-text" [style.color]="getScoreColor(getScorePercentage(result))">
-                  {{ getScorePercentage(result) }}%
-                </span>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </nz-table>
-    </nz-card>
-
-    <!-- Empty State -->
-    <nz-card class="empty-state-card modern-card" *ngIf="!dataSet || dataSet.length === 0">
-      <nz-empty 
-        nzNotFoundImage="https://gw.alipayobjects.com/zos/antfincdn/ZHrcdLPrvN/empty.svg"
-        nzNotFoundContent="No test results found"
-        nzNotFoundFooter="Take your first quiz to see results here!">
-        <button nz-button nzType="primary" nzSize="large" routerLink="/user/dashboard">
-          <span nz-icon nzType="play-circle"></span>
-          Start Taking Quizzes
-        </button>
-      </nz-empty>
-    </nz-card>
-  </div>
-</div>
-
+ 
+</nz-card>
