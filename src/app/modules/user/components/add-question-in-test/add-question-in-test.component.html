@@ -1,0 +1,226 @@
+<div class="question-form-container perspective">
+  <div class="card-3d card-3d-elevated p-8 animate-fade-in-3d">
+    <h2 class="text-center text-3xl font-bold text-primary mb-8 float-3d">{{ pageTitle }}</h2>
+    
+    <form [formGroup]="questionForm" (ngSubmit)="submitQuestion()" class="animate-slide-up-3d">
+      <!-- Question Type Selection -->
+      <div class="form-group animate-slide-up-3d" style="animation-delay: 0.1s">
+        <label>Question Type *</label>
+        <nz-select formControlName="questionType" nzPlaceHolder="Select question type" (ngModelChange)="onQuestionTypeChange($event)" class="input-3d">
+          <nz-option 
+            *ngFor="let type of questionTypes" 
+            [nzValue]="type.type" 
+            [nzLabel]="type.label">
+          </nz-option>
+        </nz-select>
+        <div class="error" *ngIf="isInvalid('questionType')">Please select a question type</div>
+        <div class="help-text" *ngIf="selectedQuestionTypeInfo">{{ selectedQuestionTypeInfo.description }}</div>
+      </div>
+
+      <!-- Question Text -->
+      <div class="form-group animate-slide-up-3d" style="animation-delay: 0.2s">
+        <label>Question Text *</label>
+        <textarea 
+          nz-input 
+          formControlName="questionText" 
+          placeholder="Enter your question (minimum 10 characters)"
+          [nzAutosize]="{ minRows: 2, maxRows: 6 }"
+          class="input-3d">
+        </textarea>
+        <div class="error" *ngIf="isInvalid('questionText')">
+          <span *ngIf="questionForm.get('questionText')?.errors?.['required']">Question text is required</span>
+          <span *ngIf="questionForm.get('questionText')?.errors?.['minlength']">Question must be at least 10 characters long</span>
+        </div>
+      </div>
+
+      <!-- Legacy Multiple Choice Options (for backward compatibility) -->
+      <ng-container *ngIf="shouldShowLegacyOptions() && isLegacyMultipleChoice()">
+        <div class="form-group animate-slide-up-3d" style="animation-delay: 0.3s">
+          <label>Option A *</label>
+          <input nz-input formControlName="optionA" placeholder="Enter Option A" class="input-3d" />
+          <div class="error" *ngIf="isInvalid('optionA')">Option A is required</div>
+        </div>
+
+        <div class="form-group animate-slide-up-3d" style="animation-delay: 0.4s">
+          <label>Option B *</label>
+          <input nz-input formControlName="optionB" placeholder="Enter Option B" class="input-3d" />
+          <div class="error" *ngIf="isInvalid('optionB')">Option B is required</div>
+        </div>
+
+        <div class="form-group animate-slide-up-3d" style="animation-delay: 0.5s">
+          <label>Option C *</label>
+          <input nz-input formControlName="optionC" placeholder="Enter Option C" class="input-3d" />
+          <div class="error" *ngIf="isInvalid('optionC')">Option C is required</div>
+        </div>
+
+        <div class="form-group animate-slide-up-3d" style="animation-delay: 0.6s">
+          <label>Option D *</label>
+          <input nz-input formControlName="optionD" placeholder="Enter Option D" class="input-3d" />
+          <div class="error" *ngIf="isInvalid('optionD')">Option D is required</div>
+        </div>
+
+        <div class="form-group animate-slide-up-3d" style="animation-delay: 0.7s">
+          <label>Correct Answer *</label>
+          <nz-select formControlName="correctAnswer" nzPlaceHolder="Select the correct answer" class="input-3d">
+            <nz-option nzValue="A" nzLabel="A - Option A"></nz-option>
+            <nz-option nzValue="B" nzLabel="B - Option B"></nz-option>
+            <nz-option nzValue="C" nzLabel="C - Option C"></nz-option>
+            <nz-option nzValue="D" nzLabel="D - Option D"></nz-option>
+          </nz-select>
+          <div class="error" *ngIf="isInvalid('correctAnswer')">Please select the correct answer</div>
+          <div class="help-text">⚠️ Select which option (A, B, C, or D) contains the correct answer.</div>
+        </div>
+      </ng-container>
+
+      <!-- New Multiple Choice Options -->
+      <ng-container *ngIf="shouldShowNewOptions() && !isLegacyMultipleChoice()">
+        <div class="form-group animate-slide-up-3d" style="animation-delay: 0.3s">
+          <label>Answer Options *</label>
+          <div class="options-container">
+            <div 
+              *ngFor="let option of optionsArray.controls; let i = index" 
+              class="option-item card-3d-subtle animate-scale-in-3d" [style.animation-delay]="(0.1 * i) + 's'">
+              <div class="option-input-group">
+                <input 
+                  nz-input 
+                  [formControl]="$any(option)" 
+                  [placeholder]="'Option ' + (i + 1)"
+                  class="option-input input-3d" />
+                <button 
+                  nz-button 
+                  nzType="text" 
+                  nzDanger
+                  type="button"
+                  (click)="removeOption(i)"
+                  [disabled]="optionsArray.length <= 2"
+                  class="remove-option-btn btn-3d btn-3d-danger small">
+                  <i nz-icon nzType="delete"></i>
+                </button>
+              </div>
+              <div class="error" *ngIf="isArrayInvalid('options', i)">Option is required</div>
+            </div>
+            <button 
+              nz-button 
+              nzType="dashed" 
+              type="button"
+              (click)="addOption()"
+              class="add-option-btn btn-3d btn-3d-secondary animate-pulse-3d">
+              <i nz-icon nzType="plus"></i> Add Option
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group animate-slide-up-3d" style="animation-delay: 0.4s">
+          <label>Correct Answer(s) *</label>
+          <ng-container *ngIf="selectedQuestionType === QuestionType.MULTIPLE_CHOICE_SINGLE || selectedQuestionType === QuestionType.MULTIPLE_CHOICE_BEST">
+            <nz-select formControlName="correctAnswers" nzPlaceHolder="Select the correct answer" class="input-3d">
+              <nz-option 
+                *ngFor="let option of optionsArray.controls; let i = index" 
+                [nzValue]="i" 
+                [nzLabel]="'Option ' + (i + 1) + ': ' + (option.value || 'Empty')">
+              </nz-option>
+            </nz-select>
+          </ng-container>
+          <ng-container *ngIf="selectedQuestionType === QuestionType.MULTIPLE_CHOICE_MULTIPLE">
+            <nz-select 
+              formControlName="correctAnswers" 
+              nzMode="multiple"
+              nzPlaceHolder="Select all correct answers"
+              class="input-3d">
+              <nz-option 
+                *ngFor="let option of optionsArray.controls; let i = index" 
+                [nzValue]="i" 
+                [nzLabel]="'Option ' + (i + 1) + ': ' + (option.value || 'Empty')">
+              </nz-option>
+            </nz-select>
+            <div class="help-text">For multiple choice questions, select all correct answers.</div>
+          </ng-container>
+          <div class="error" *ngIf="isInvalid('correctAnswers')">Please select the correct answer(s)</div>
+        </div>
+      </ng-container>
+
+      <!-- Binary Choice (True/False, Yes/No) -->
+      <ng-container *ngIf="shouldShowBinaryChoice()">
+        <div class="form-group animate-slide-up-3d" style="animation-delay: 0.3s">
+          <label>Correct Answer *</label>
+          <nz-radio-group formControlName="correctAnswers" class="radio-group-3d">
+            <label 
+              nz-radio 
+              *ngFor="let option of getBinaryChoiceOptions()" 
+              [nzValue]="option.value"
+              class="radio-3d">
+              {{ option.label }}
+            </label>
+          </nz-radio-group>
+          <div class="error" *ngIf="isInvalid('correctAnswers')">Please select the correct answer</div>
+        </div>
+      </ng-container>
+
+      <!-- Fill in the Blank -->
+      <ng-container *ngIf="shouldShowFillInTheBlank()">
+        <div class="form-group animate-slide-up-3d" style="animation-delay: 0.3s">
+          <label>Correct Answer(s) *</label>
+          <div class="fill-blank-container">
+            <div 
+              *ngFor="let answer of correctAnswersArray.controls; let i = index" 
+              class="answer-item card-3d-subtle animate-scale-in-3d" [style.animation-delay]="(0.1 * i) + 's'">
+              <input 
+                nz-input 
+                [formControl]="$any(answer)" 
+                [placeholder]="selectedQuestionType === QuestionType.FILL_IN_THE_BLANK ? 'Acceptable answer ' + (i + 1) : 'Phrase ' + (i + 1)"
+                class="answer-input input-3d" />
+              <button 
+                nz-button 
+                nzType="text" 
+                nzDanger
+                type="button"
+                (click)="removeCorrectAnswer(i)"
+                [disabled]="correctAnswersArray.length <= 1"
+                class="remove-answer-btn btn-3d btn-3d-danger small">
+                <i nz-icon nzType="delete"></i>
+              </button>
+              <div class="error" *ngIf="isArrayInvalid('correctAnswers', i)">Answer is required</div>
+            </div>
+            <button 
+              nz-button 
+              nzType="dashed" 
+              type="button"
+              (click)="addCorrectAnswer()"
+              class="add-answer-btn btn-3d btn-3d-secondary animate-pulse-3d">
+              <i nz-icon nzType="plus"></i> Add Answer
+            </button>
+          </div>
+          <div class="help-text">
+            <span *ngIf="selectedQuestionType === QuestionType.FILL_IN_THE_BLANK">
+              Add all acceptable answers. Matching will be case-insensitive.
+            </span>
+            <span *ngIf="selectedQuestionType === QuestionType.FILL_IN_THE_BLANK_PHRASE">
+              Add key phrases that must be present in the answer.
+            </span>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Form Actions -->
+      <div class="form-actions animate-slide-up-3d" style="animation-delay: 0.8s">
+        <button 
+          nz-button 
+          nzType="default" 
+          type="button"
+          (click)="goBack()"
+          class="cancel-btn btn-3d btn-3d-secondary">
+          Cancel
+        </button>
+        <button 
+          nz-button 
+          nzType="primary" 
+          type="submit"
+          [nzLoading]="isSubmitting"
+          [disabled]="questionForm.invalid"
+          class="submit-btn btn-3d btn-3d-primary">
+          {{ isEditing ? 'Update Question' : 'Add Question' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

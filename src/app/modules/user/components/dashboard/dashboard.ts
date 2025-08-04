@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { NzCardModule } from 'ng-zorro-antd/card';
 import { NzGridModule } from 'ng-zorro-antd/grid';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -9,10 +10,14 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzTypographyModule } from 'ng-zorro-antd/typography';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
-import { AdminService } from '../../../admin/services/admin.service';
 import { Test } from '../../services/test';
 import { PaginationComponent } from '../../../shared/components/pagination/pagination.component';
+import { UserStorageService } from '../../../shared/auth/services/user-storage.service';
+import { debounceTime, Subject, Subscription } from 'rxjs';
+import { AppComponent } from '../../../../app.component';
 
 interface TestInterface {
   id: number;
@@ -21,6 +26,8 @@ interface TestInterface {
   timePerQuestion: number;
   questionCount?: number;
   difficulty?: string;
+  createdByUserId?: number;
+  createdByUserName?: string;
 }
 
 @Component({
@@ -28,6 +35,7 @@ interface TestInterface {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     NzCardModule,
     NzGridModule,
     NzButtonModule,
@@ -36,15 +44,25 @@ interface TestInterface {
     NzSpinModule,
     NzEmptyModule,
     NzTypographyModule,
+    NzDropDownModule,
+    NzMenuModule,
     RouterModule,
     PaginationComponent
   ],
   templateUrl: './dashboard.html',
   styleUrls: ['./dashboard.scss']
 })
-export class Dashboard implements OnInit {
+export class Dashboard implements OnInit, OnDestroy {
   tests: TestInterface[] = [];
+  searchResults: TestInterface[] = [];
   isLoading = false;
+  
+  // Search properties
+  searchQuery = '';
+  isSearching = false;
+  hasSearched = false;
+  private searchSubject = new Subject<string>();
+  private headerSearchSubscription?: Subscription;
   completedTests = 0;
   averageScore = 0;
   
@@ -62,7 +80,6 @@ export class Dashboard implements OnInit {
 
   constructor(
     private notification: NzNotificationService,
-    private adminService: AdminService,
     private testService: Test,
     private router: Router
   ) {}
@@ -70,6 +87,37 @@ export class Dashboard implements OnInit {
   ngOnInit(): void {
     this.getAllTests();
     this.loadAllTestsStats();
+    this.setupSearch();
+    this.setupHeaderSearch();
+  }
+
+  ngOnDestroy(): void {
+    if (this.headerSearchSubscription) {
+      this.headerSearchSubscription.unsubscribe();
+    }
+  }
+
+  private setupHeaderSearch(): void {
+    // Listen to header search from AppComponent
+    this.headerSearchSubscription = AppComponent.getSearchQuery$().subscribe(query => {
+      this.searchQuery = query;
+      if (query.trim()) {
+        this.performSearchInternal(query.trim());
+      } else {
+        this.clearSearch();
+      }
+    });
+  }
+
+  private setupSearch(): void {
+    // Debounce search input to avoid too many API calls
+    this.searchSubject.pipe(
+      debounceTime(300)
+    ).subscribe(query => {
+      if (query.trim()) {
+        this.performSearchInternal(query);
+      }
+    });
   }
 
   getAllTests(): void {
@@ -190,5 +238,73 @@ export class Dashboard implements OnInit {
 
   refreshTests(): void {
     this.getAllTests();
+  }
+
+  isMyTest(test: TestInterface): boolean {
+    const currentUserId = UserStorageService.getUserId();
+    return test.createdByUserId?.toString() === currentUserId;
+  }
+
+  getTestBadgeText(test: TestInterface): string {
+    return this.isMyTest(test) ? 'My Test' : 'Quiz';
+  }
+
+  getTestBadgeClass(test: TestInterface): string {
+    return this.isMyTest(test) ? 'my-test-badge' : 'quiz-badge';
+  }
+
+  // Search methods
+  onSearchInput(): void {
+    this.searchSubject.next(this.searchQuery);
+  }
+
+  performSearch(): void {
+    if (this.searchQuery.trim()) {
+      this.performSearchInternal(this.searchQuery.trim());
+    }
+  }
+
+  private performSearchInternal(query: string): void {
+    this.isSearching = true;
+    
+    // Add search endpoint to AdminService or create a search service
+    this.testService.searchTests(query).subscribe({
+      next: (results) => {
+        this.searchResults = results || [];
+        this.hasSearched = true;
+        this.isSearching = false;
+      },
+      error: (error) => {
+        console.error('Search error:', error);
+        this.isSearching = false;
+        this.hasSearched = true;
+        this.searchResults = [];
+        this.notification.error('ERROR', 'Search failed. Please try again.', { nzDuration: 3000 });
+      }
+    });
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchResults = [];
+    this.hasSearched = false;
+  }
+
+  getDisplayTests(): TestInterface[] {
+    return this.searchQuery && this.hasSearched ? this.searchResults : this.tests;
+  }
+
+  highlightSearchTerm(text: string): string {
+    if (!this.searchQuery || !text) {
+      return text;
+    }
+    
+    const searchTerm = this.searchQuery.trim();
+    if (!searchTerm) {
+      return text;
+    }
+    
+    const regex = new RegExp(`(${searchTerm})`, 'gi');
+    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
   }
 }

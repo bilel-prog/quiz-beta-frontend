@@ -1,0 +1,290 @@
+<div class="user-management-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="header-text">
+          <h1 class="page-title">User Management</h1>
+          <p class="page-subtitle">Manage registered users and their accounts</p>
+        </div>
+        <div class="header-actions">
+          <button nz-button nzType="default" (click)="refreshUsers()">
+            <span nz-icon nzType="reload"></span>
+            Refresh
+          </button>
+          <button nz-button nzType="default" routerLink="/admin/dashboard">
+            <span nz-icon nzType="arrow-left"></span>
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-section">
+    <div class="container">
+      <div class="loading-card">
+        <nz-spin nzSize="large" nzTip="Loading users..."></nz-spin>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Section -->
+  <div *ngIf="!isLoading" class="users-section">
+    <div class="container">
+      <!-- Stats Summary -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value">{{ getTotalUsers() }}</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ getActiveUsers() }}</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">{{ getAdminUsers() }}</div>
+          <div class="stat-label">Admin Users</div>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="users-table-container">
+        <nz-table [nzData]="users" 
+                  [nzSize]="'middle'" 
+                  [nzPageSize]="pageSize"
+                  [nzFrontPagination]="false"
+                  [nzShowPagination]="false"
+                  [nzLoading]="isLoading">
+          <thead>
+            <tr>
+              <th nzWidth="15%">ID</th>
+              <th nzWidth="25%">Name</th>
+              <th nzWidth="25%">Email</th>
+              <th nzWidth="15%">Role</th>
+              <th nzWidth="20%">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users">
+              <td>
+                <nz-tag nzColor="blue">{{ user.id }}</nz-tag>
+              </td>
+              <td>
+                <div class="user-info">
+                  <span nz-icon nzType="user" class="user-icon"></span>
+                  <span class="user-name">{{ user.name }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="user-email">{{ user.email }}</span>
+              </td>
+              <td>
+                <nz-tag [nzColor]="user.role === 'ADMIN' ? 'red' : 'green'">
+                  {{ user.role }}
+                </nz-tag>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button nz-button 
+                          nzType="default" 
+                          nzSize="small"
+                          (click)="viewUserDetails(user)"
+                          title="View Details">
+                    <span nz-icon nzType="eye"></span>
+                  </button>
+                  <button nz-button 
+                          nzType="primary" 
+                          nzDanger 
+                          nzSize="small"
+                          (click)="confirmDeleteUser(user)"
+                          [nzLoading]="deletingUserIds.has(user.id)"
+                          [disabled]="user.role === 'ADMIN' && getAdminUsers() <= 1"
+                          title="Delete User">
+                    <span nz-icon nzType="delete"></span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </nz-table>
+
+        <!-- Pagination -->
+        <div class="pagination-container" *ngIf="totalUsers > pageSize">
+          <nz-pagination 
+            [(nzPageIndex)]="pageIndex"
+            [nzTotal]="totalUsers" 
+            [nzPageSize]="pageSize"
+            [nzShowSizeChanger]="true"
+            [nzPageSizeOptions]="[10, 20, 50, 100]"
+            (nzPageIndexChange)="onPageChange($event)"
+            (nzPageSizeChange)="onPageSizeChange($event)"
+            nzShowQuickJumper>
+          </nz-pagination>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Details Modal -->
+<nz-modal
+  [(nzVisible)]="showUserDetailsModal"
+  nzTitle="User Details"
+  nzWidth="800px"
+  [nzFooter]="null"
+  (nzOnCancel)="hideUserDetailsModal()">
+  
+  <ng-container *nzModalContent>
+    <div *ngIf="selectedUser" class="user-details">
+      <!-- Basic User Information -->
+      <div class="user-info-section">
+        <h4>Basic Information</h4>
+        <div class="detail-row">
+          <label>ID:</label>
+          <span>{{ selectedUser.id }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Name:</label>
+          <span>{{ selectedUser.name }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Email:</label>
+          <span>{{ selectedUser.email }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Role:</label>
+          <nz-tag [nzColor]="selectedUser.role === 'ADMIN' ? 'red' : 'green'">
+            {{ selectedUser.role }}
+          </nz-tag>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div *ngIf="loadingUserDetails" class="loading-section">
+        <nz-spin nzSimple></nz-spin>
+        <span class="loading-text">Loading user activity...</span>
+      </div>
+
+      <!-- Tests Information -->
+      <div *ngIf="!loadingUserDetails" class="tests-section">
+        
+        <!-- Created Tests -->
+        <div class="test-category">
+          <h4>
+            <span nz-icon nzType="plus-circle" nzTheme="outline"></span>
+            Tests Created ({{ selectedUser.createdTests?.length || 0 }})
+          </h4>
+          <div *ngIf="selectedUser.createdTests && selectedUser.createdTests.length > 0; else noCreatedTests" 
+               class="tests-list">
+            <div *ngFor="let test of selectedUser.createdTests" class="test-item">
+              <div class="test-info">
+                <span class="test-title">{{ test.title }}</span>
+                <span class="test-description">{{ test.description }}</span>
+              </div>
+              <div class="test-stats">
+                <nz-tag nzColor="blue">{{ test.questionCount || 0 }} questions</nz-tag>
+                <nz-tag nzColor="purple">{{ test.resultCount || 0 }} results</nz-tag>
+              </div>
+            </div>
+            
+            <!-- Load More Button for Created Tests -->
+            <div *ngIf="selectedUser.hasMoreCreatedTests" class="load-more-section">
+              <button nz-button 
+                      nzType="dashed" 
+                      nzBlock
+                      (click)="loadMoreCreatedTests()"
+                      [nzLoading]="selectedUser.loadingMoreCreatedTests">
+                <span nz-icon nzType="down" nzTheme="outline"></span>
+                Load More Tests (5 more)
+              </button>
+            </div>
+          </div>
+          <ng-template #noCreatedTests>
+            <div class="empty-state">
+              <span nz-icon nzType="file-add" nzTheme="outline" class="empty-icon"></span>
+              <p>No tests created yet</p>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Taken Tests -->
+        <div class="test-category">
+          <h4>
+            <span nz-icon nzType="check-circle" nzTheme="outline"></span>
+            Tests Taken ({{ selectedUser.takenTests?.length || 0 }})
+          </h4>
+          <div *ngIf="selectedUser.takenTests && selectedUser.takenTests.length > 0; else noTakenTests" 
+               class="tests-list">
+            <div *ngFor="let result of selectedUser.takenTests" class="test-item">
+              <div class="test-info">
+                <span class="test-title">{{ result.testTitle }}</span>
+                <span class="test-description">Taken on {{ result.takenDate | date:'short' }}</span>
+              </div>
+              <div class="test-stats">
+                <nz-tag [nzColor]="result.score >= 70 ? 'green' : result.score >= 50 ? 'orange' : 'red'">
+                  {{ result.score }}% ({{ result.correctAnswers }}/{{ result.totalQuestions }})
+                </nz-tag>
+              </div>
+            </div>
+            
+            <!-- Load More Button for Taken Tests -->
+            <div *ngIf="selectedUser.hasMoreTakenTests" class="load-more-section">
+              <button nz-button 
+                      nzType="dashed" 
+                      nzBlock
+                      (click)="loadMoreTakenTests()"
+                      [nzLoading]="selectedUser.loadingMoreTakenTests">
+                <span nz-icon nzType="down" nzTheme="outline"></span>
+                Load More Results (5 more)
+              </button>
+            </div>
+          </div>
+          <ng-template #noTakenTests>
+            <div class="empty-state">
+              <span nz-icon nzType="file-done" nzTheme="outline" class="empty-icon"></span>
+              <p>No tests taken yet</p>
+            </div>
+          </ng-template>
+        </div>
+
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>
+
+<!-- Delete Confirmation Modal -->
+<nz-modal
+  [(nzVisible)]="showDeleteModal"
+  nzTitle="Confirm Delete User"
+  nzWidth="400px"
+  [nzFooter]="null"
+  (nzOnCancel)="hideDeleteModal()">
+  
+  <ng-container *nzModalContent>
+    <div class="text-center">
+      <div class="mb-4">
+        <span nz-icon nzType="exclamation-circle" nzTheme="outline" class="warning-icon"></span>
+      </div>
+      <h3 class="text-lg font-semibold mb-2">Delete User</h3>
+      <p class="text-secondary mb-6">
+        Are you sure you want to delete user "<strong>{{ userToDelete?.name }}</strong>"? 
+        This action cannot be undone and will remove all their data.
+      </p>
+      
+      <div class="flex gap-3 justify-center">
+        <button nz-button nzType="default" (click)="hideDeleteModal()">
+          Cancel
+        </button>
+        <button nz-button
+          nzType="primary"
+          nzDanger
+          (click)="deleteUser()"
+          [nzLoading]="isDeletingUser">
+          Delete User
+        </button>
+      </div>
+    </div>
+  </ng-container>
+</nz-modal>

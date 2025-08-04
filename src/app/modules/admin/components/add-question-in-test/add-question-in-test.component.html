@@ -1,59 +1,388 @@
 <div class="question-form-container">
   <h2>Add a Question</h2>
+  
   <form [formGroup]="questionForm" (ngSubmit)="onSubmit()">
-  <div class="form-group">
-    <label>Question Title *</label>
-    <input nz-input formControlName="questionText" placeholder="Enter your question (minimum 10 characters)" />
-    <div class="error" *ngIf="isInvalid('questionText')">
-      <span *ngIf="questionForm.get('questionText')?.errors?.['required']">Question text is required</span>
-      <span *ngIf="questionForm.get('questionText')?.errors?.['minlength']">Question must be at least 10 characters long</span>
+    <!-- Question Type Selection -->
+    <div class="form-group">
+      <label>Question Type *</label>
+      <nz-select formControlName="questionType" nzPlaceHolder="Select question type" (ngModelChange)="onQuestionTypeChange($event)">
+        <nz-option-group nzLabel="Objective Questions">
+          <nz-option 
+            *ngFor="let type of getObjectiveQuestions()" 
+            [nzValue]="type.type" 
+            [nzLabel]="type.label">
+          </nz-option>
+        </nz-option-group>
+        <nz-option-group nzLabel="Subjective Questions">
+          <nz-option 
+            *ngFor="let type of getSubjectiveQuestions()" 
+            [nzValue]="type.type" 
+            [nzLabel]="type.label">
+          </nz-option>
+        </nz-option-group>
+      </nz-select>
+      <div class="error" *ngIf="isInvalid('questionType')">Please select a question type</div>
+      <div class="help-text" *ngIf="selectedQuestionTypeInfo">{{ selectedQuestionTypeInfo.description }}</div>
     </div>
-  </div>
 
-  <div class="form-group">
-    <label>Option A *</label>
-    <input nz-input formControlName="optionA" placeholder="Enter Option A" />
-    <div class="error" *ngIf="isInvalid('optionA')">Option A is required</div>
-  </div>
+    <!-- Question Title -->
+    <div class="form-group">
+      <label>Question Text *</label>
+      <textarea 
+        nz-input 
+        formControlName="questionText" 
+        placeholder="Enter your question (minimum 10 characters)"
+        [nzAutosize]="{ minRows: 2, maxRows: 6 }">
+      </textarea>
+      <div class="error" *ngIf="isInvalid('questionText')">
+        <span *ngIf="questionForm.get('questionText')?.errors?.['required']">Question text is required</span>
+        <span *ngIf="questionForm.get('questionText')?.errors?.['minlength']">Question must be at least 10 characters long</span>
+      </div>
+    </div>
 
-  <div class="form-group">
-    <label>Option B *</label>
-    <input nz-input formControlName="optionB" placeholder="Enter Option B" />
-    <div class="error" *ngIf="isInvalid('optionB')">Option B is required</div>
-  </div>
+    <!-- Legacy Multiple Choice Options (for backward compatibility) -->
+    <ng-container *ngIf="shouldShowLegacyOptions() && isLegacyMultipleChoice()">
+      <div class="form-group">
+        <label>Option A *</label>
+        <input nz-input formControlName="optionA" placeholder="Enter Option A" />
+        <div class="error" *ngIf="isInvalid('optionA')">Option A is required</div>
+      </div>
 
-  <div class="form-group">
-    <label>Option C *</label>
-    <input nz-input formControlName="optionC" placeholder="Enter Option C" />
-    <div class="error" *ngIf="isInvalid('optionC')">Option C is required</div>
-  </div>
+      <div class="form-group">
+        <label>Option B *</label>
+        <input nz-input formControlName="optionB" placeholder="Enter Option B" />
+        <div class="error" *ngIf="isInvalid('optionB')">Option B is required</div>
+      </div>
 
-  <div class="form-group">
-    <label>Option D *</label>
-    <input nz-input formControlName="optionD" placeholder="Enter Option D" />
-    <div class="error" *ngIf="isInvalid('optionD')">Option D is required</div>
-  </div>
+      <div class="form-group">
+        <label>Option C *</label>
+        <input nz-input formControlName="optionC" placeholder="Enter Option C" />
+        <div class="error" *ngIf="isInvalid('optionC')">Option C is required</div>
+      </div>
 
-  <div class="form-group">
-    <label>Correct Answer *</label>
-    <nz-select nz-select formControlName="correctAnswer" nzPlaceHolder="Select the correct answer">
-      <nz-option nzValue="A" nzLabel="Option A"></nz-option>
-      <nz-option nzValue="B" nzLabel="Option B"></nz-option>
-      <nz-option nzValue="C" nzLabel="Option C"></nz-option>
-      <nz-option nzValue="D" nzLabel="Option D"></nz-option>
-    </nz-select>
-    <div class="error" *ngIf="isInvalid('correctAnswer')">Please select the correct answer</div>
-    <div class="help-text">⚠️ Select which option (A, B, C, or D) contains the correct answer. The actual text of the selected option will be sent to the backend.</div>
-  </div>
+      <div class="form-group">
+        <label>Option D *</label>
+        <input nz-input formControlName="optionD" placeholder="Enter Option D" />
+        <div class="error" *ngIf="isInvalid('optionD')">Option D is required</div>
+      </div>
 
-  <div class="form-actions">
-    <button nz-button nzType="primary" [disabled]="questionForm.invalid" type="submit">
-      Add Question
-    </button>
-    <button nz-button nzType="default" type="button" (click)="goBack()">
-      Cancel
-    </button>
-  </div>
-</form>
+      <div class="form-group">
+        <label>Correct Answer *</label>
+        <nz-select formControlName="correctAnswer" nzPlaceHolder="Select the correct answer">
+          <nz-option nzValue="A" nzLabel="A - Option A"></nz-option>
+          <nz-option nzValue="B" nzLabel="B - Option B"></nz-option>
+          <nz-option nzValue="C" nzLabel="C - Option C"></nz-option>
+          <nz-option nzValue="D" nzLabel="D - Option D"></nz-option>
+        </nz-select>
+        <div class="error" *ngIf="isInvalid('correctAnswer')">Please select the correct answer</div>
+        <div class="help-text">⚠️ Select which option (A, B, C, or D) contains the correct answer.</div>
+      </div>
+    </ng-container>
 
+    <!-- New Multiple Choice Options -->
+    <ng-container *ngIf="shouldShowNewOptions() && !isLegacyMultipleChoice()">
+      <div class="form-group">
+        <label>Answer Options *</label>
+        <div class="options-container">
+          <div 
+            *ngFor="let option of getOptionsFormArray().controls; let i = index" 
+            class="option-item">
+            <div class="option-input-group">
+              <input 
+                nz-input 
+                [formControl]="$any(option)" 
+                [placeholder]="'Option ' + (i + 1)"
+                class="option-input" />
+              <button 
+                nz-button 
+                nzType="text" 
+                nzDanger
+                type="button"
+                (click)="removeOption(i)"
+                [disabled]="getOptionsFormArray().length <= 2"
+                class="remove-option-btn">
+                <i nz-icon nzType="delete"></i>
+              </button>
+            </div>
+            <div class="error" *ngIf="isArrayInvalid('options', i)">Option is required</div>
+          </div>
+          <button 
+            nz-button 
+            nzType="dashed" 
+            type="button"
+            (click)="addOption()"
+            class="add-option-btn">
+            <i nz-icon nzType="plus"></i> Add Option
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Correct Answer(s) *</label>
+        <ng-container *ngIf="selectedQuestionType === QuestionType.MULTIPLE_CHOICE_SINGLE || selectedQuestionType === QuestionType.MULTIPLE_CHOICE_BEST">
+          <nz-select formControlName="correctAnswers" nzPlaceHolder="Select the correct answer">
+            <nz-option 
+              *ngFor="let option of getOptionsFormArray().controls; let i = index" 
+              [nzValue]="i" 
+              [nzLabel]="'Option ' + (i + 1) + ': ' + (option.value || 'Empty')">
+            </nz-option>
+          </nz-select>
+        </ng-container>
+        <ng-container *ngIf="selectedQuestionType === QuestionType.MULTIPLE_CHOICE_MULTIPLE">
+          <nz-select 
+            formControlName="correctAnswers" 
+            nzMode="multiple"
+            nzPlaceHolder="Select all correct answers">
+            <nz-option 
+              *ngFor="let option of getOptionsFormArray().controls; let i = index" 
+              [nzValue]="i" 
+              [nzLabel]="'Option ' + (i + 1) + ': ' + (option.value || 'Empty')">
+            </nz-option>
+          </nz-select>
+          <div class="help-text">For multiple choice questions, select all correct answers.</div>
+        </ng-container>
+        <div class="error" *ngIf="isInvalid('correctAnswers')">Please select the correct answer(s)</div>
+      </div>
+    </ng-container>
+
+    <!-- Binary Choice (True/False, Yes/No) -->
+    <ng-container *ngIf="shouldShowBinaryChoice()">
+      <div class="form-group">
+        <label>Correct Answer *</label>
+        <nz-radio-group formControlName="correctAnswers">
+          <label 
+            nz-radio 
+            *ngFor="let option of getBinaryChoiceOptions()" 
+            [nzValue]="option.value">
+            {{ option.label }}
+          </label>
+        </nz-radio-group>
+        <div class="error" *ngIf="isInvalid('correctAnswers')">Please select the correct answer</div>
+      </div>
+    </ng-container>
+
+    <!-- Fill in the Blank -->
+    <ng-container *ngIf="shouldShowFillInTheBlank()">
+      <div class="form-group">
+        <label>Correct Answer(s) *</label>
+        <div class="fill-blank-container">
+          <div 
+            *ngFor="let answer of getCorrectAnswersFormArray().controls; let i = index" 
+            class="answer-item">
+            <input 
+              nz-input 
+              [formControl]="$any(answer)" 
+              [placeholder]="selectedQuestionType === QuestionType.FILL_IN_THE_BLANK ? 'Acceptable answer ' + (i + 1) : 'Phrase ' + (i + 1)"
+              class="answer-input" />
+            <button 
+              nz-button 
+              nzType="text" 
+              nzDanger
+              type="button"
+              (click)="removeCorrectAnswer(i)"
+              [disabled]="getCorrectAnswersFormArray().length <= 1"
+              class="remove-answer-btn">
+              <i nz-icon nzType="delete"></i>
+            </button>
+            <div class="error" *ngIf="isArrayInvalid('correctAnswers', i)">Answer is required</div>
+          </div>
+          <button 
+            nz-button 
+            nzType="dashed" 
+            type="button"
+            (click)="addCorrectAnswer()"
+            class="add-answer-btn">
+            <i nz-icon nzType="plus"></i> Add Answer
+          </button>
+        </div>
+        <div class="help-text">
+          <span *ngIf="selectedQuestionType === QuestionType.FILL_IN_THE_BLANK">
+            Add all acceptable answers. Matching will be case-insensitive.
+          </span>
+          <span *ngIf="selectedQuestionType === QuestionType.FILL_IN_THE_BLANK_PHRASE">
+            Add key phrases that must be present in the answer.
+          </span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Matching Questions -->
+    <ng-container *ngIf="shouldShowMatching()">
+      <div class="form-group">
+        <label>Matching Pairs *</label>
+        <div class="matching-container">
+          <div 
+            *ngFor="let pair of getMatchingPairsFormArray().controls; let i = index" 
+            class="matching-pair">
+            <div class="pair-inputs">
+              <input 
+                nz-input 
+                [formControl]="$any(pair.get('left'))" 
+                placeholder="Left item"
+                class="pair-input" />
+              <span class="pair-connector">↔</span>
+              <input 
+                nz-input 
+                [formControl]="$any(pair.get('right'))" 
+                placeholder="Right item"
+                class="pair-input" />
+              <button 
+                nz-button 
+                nzType="text" 
+                nzDanger
+                type="button"
+                (click)="removeMatchingPair(i)"
+                [disabled]="getMatchingPairsFormArray().length <= 2"
+                class="remove-pair-btn">
+                <i nz-icon nzType="delete"></i>
+              </button>
+            </div>
+            <div class="pair-errors">
+              <div class="error" *ngIf="isArrayInvalid('matchingPairs', i, 'left')">Left item is required</div>
+              <div class="error" *ngIf="isArrayInvalid('matchingPairs', i, 'right')">Right item is required</div>
+            </div>
+          </div>
+          <button 
+            nz-button 
+            nzType="dashed" 
+            type="button"
+            (click)="addMatchingPair()"
+            class="add-pair-btn">
+            <i nz-icon nzType="plus"></i> Add Pair
+          </button>
+        </div>
+        <div class="help-text">
+          Create pairs that students need to match correctly.
+          <span *ngIf="selectedQuestionType === QuestionType.MATCHING_ONE_TO_MANY">
+            Each left item can match multiple right items.
+          </span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Sequencing/Ordering Questions -->
+    <ng-container *ngIf="shouldShowSequencing()">
+      <div class="form-group">
+        <label>Items to Order *</label>
+        <div class="sequence-container">
+          <div 
+            *ngFor="let item of getSequenceItemsFormArray().controls; let i = index" 
+            class="sequence-item">
+            <div class="sequence-input-group">
+              <span class="sequence-number">{{ i + 1 }}.</span>
+              <input 
+                nz-input 
+                [formControl]="$any(item)" 
+                [placeholder]="'Item ' + (i + 1) + ' (in correct order)'"
+                class="sequence-input" />
+              <button 
+                nz-button 
+                nzType="text" 
+                nzDanger
+                type="button"
+                (click)="removeSequenceItem(i)"
+                [disabled]="getSequenceItemsFormArray().length <= 2"
+                class="remove-sequence-btn">
+                <i nz-icon nzType="delete"></i>
+              </button>
+            </div>
+            <div class="error" *ngIf="isArrayInvalid('sequenceItems', i)">Item is required</div>
+          </div>
+          <button 
+            nz-button 
+            nzType="dashed" 
+            type="button"
+            (click)="addSequenceItem()"
+            class="add-sequence-btn">
+            <i nz-icon nzType="plus"></i> Add Item
+          </button>
+        </div>
+        <div class="help-text">
+          Enter items in the correct order. Students will see them shuffled and need to arrange them correctly.
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Short Answer -->
+    <ng-container *ngIf="shouldShowShortAnswer()">
+      <div class="form-group">
+        <label>Answer Guidelines</label>
+        <textarea 
+          nz-input 
+          formControlName="answerGuidelines" 
+          placeholder="Provide guidelines for what constitutes a good answer (optional but recommended)"
+          [nzAutosize]="{ minRows: 3, maxRows: 6 }">
+        </textarea>
+        <div class="help-text">
+          These guidelines will help instructors grade the answers consistently.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Maximum Points</label>
+        <nz-input-number 
+          formControlName="maxPoints" 
+          [nzMin]="1" 
+          [nzMax]="100"
+          nzPlaceHolder="Points for this question">
+        </nz-input-number>
+      </div>
+    </ng-container>
+
+    <!-- Essay -->
+    <ng-container *ngIf="shouldShowEssay()">
+      <div class="form-group">
+        <label>Essay Prompt Guidelines</label>
+        <textarea 
+          nz-input 
+          formControlName="answerGuidelines" 
+          placeholder="Provide detailed guidelines for what the essay should cover"
+          [nzAutosize]="{ minRows: 4, maxRows: 8 }">
+        </textarea>
+        <div class="help-text">
+          Include expectations for length, key points to cover, grading criteria, etc.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Maximum Points</label>
+        <nz-input-number 
+          formControlName="maxPoints" 
+          [nzMin]="1" 
+          [nzMax]="100"
+          nzPlaceHolder="Points for this question">
+        </nz-input-number>
+      </div>
+
+      <div class="form-group">
+        <label>Minimum Word Count</label>
+        <nz-input-number 
+          formControlName="minWordCount" 
+          [nzMin]="0" 
+          [nzMax]="10000"
+          nzPlaceHolder="Minimum words required (optional)">
+        </nz-input-number>
+      </div>
+    </ng-container>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+      <button 
+        nz-button 
+        nzType="primary" 
+        [disabled]="questionForm.invalid" 
+        [nzLoading]="isSubmitting"
+        type="submit">
+        Add Question
+      </button>
+      <button 
+        nz-button 
+        nzType="default" 
+        type="button" 
+        (click)="goBack()"
+        [disabled]="isSubmitting">
+        Cancel
+      </button>
+    </div>
+  </form>
 </div>

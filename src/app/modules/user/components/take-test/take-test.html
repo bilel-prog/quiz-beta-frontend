@@ -1,16 +1,16 @@
-<div class="take-test-container">
+<div class="take-test-container perspective">
   <!-- Test Header -->
-  <div class="test-header" *ngIf="testData">
-    <div class="container">
+  <div class="test-header card-3d-elevated animate-slide-down-3d" *ngIf="testData">
+    <div class="container-3d">
       <div class="header-content">
         <div class="test-info-row">
           <div class="test-info">
-            <h1 class="test-title text-3xl font-bold text-primary mb-2">{{ testData.title }}</h1>
-            <p class="test-description text-secondary mb-6">{{ testData.description }}</p>
+            <h1 class="test-title text-3xl font-bold text-primary mb-2 float-3d">{{ testData.title }}</h1>
+            <p class="test-description text-secondary mb-6 animate-fade-in-3d" style="animation-delay: 0.1s">{{ testData.description }}</p>
           </div>
           
           <!-- Timer Section -->
-          <div class="timer-section" *ngIf="timeRemaining > 0 && !isTestCompleted">
+          <div class="timer-section card-3d-subtle animate-scale-in-3d" *ngIf="timeRemaining > 0 && !isTestCompleted" style="animation-delay: 0.2s">
             <div class="timer-display" [ngClass]="getTimerClass()">
               <div class="timer-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -27,13 +27,13 @@
         </div>
         
         <!-- Progress Section -->
-        <div class="progress-section">
+        <div class="progress-section animate-slide-up-3d" style="animation-delay: 0.3s">
           <div class="progress-info flex justify-between items-center mb-2">
             <span class="text-sm text-secondary">Question {{ currentQuestionIndex + 1 }} of {{ questions.length }}</span>
             <span class="text-sm text-secondary">{{ getProgressPercentage() }}% Complete</span>
           </div>
-          <div class="progress-bar">
-            <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+          <div class="progress-bar progress-bar-3d">
+            <div class="progress-fill progress-fill-3d" [style.width.%]="getProgressPercentage()"></div>
           </div>
         </div>
       </div>
@@ -42,8 +42,8 @@
 
   <!-- Loading State -->
   <div *ngIf="isLoading" class="loading-container">
-    <div class="container">
-      <div class="loading-card card p-8 text-center">
+    <div class="container-3d">
+      <div class="loading-card card-3d p-8 text-center animate-pulse-3d">
         <div class="loading-spinner"></div>
         <p class="text-secondary">Loading test questions...</p>
       </div>
@@ -52,78 +52,199 @@
 
   <!-- Question Section -->
   <div *ngIf="!isLoading && getCurrentQuestion()" class="question-container">
-    <div class="container">
-      <div class="question-card card p-8">
+    <div class="container-3d">
+      <div class="question-card card-3d-elevated p-8 animate-fade-in-3d">
         <!-- Question Text -->
-        <h2 class="question-text text-xl font-semibold mb-8 text-primary">
+        <h2 class="question-text text-xl font-semibold mb-6 text-primary float-3d">
           {{ getCurrentQuestion()?.questionText }}
         </h2>
 
-        <!-- Options -->
-        <div class="options-grid">
-          <div 
-            class="option-card"
-            [ngClass]="{ 
-              'selected': isAnswerSelected(getCurrentQuestion()!.id, 'A'),
-              'correct': isTestCompleted && getCurrentQuestion()?.correctAnswer === 'A',
-              'incorrect': isTestCompleted && isAnswerSelected(getCurrentQuestion()!.id, 'A') && getCurrentQuestion()?.correctAnswer !== 'A'
-            }"
-            (click)="selectAnswer(getCurrentQuestion()!.id, 'A')">
-            <div class="option-indicator">
-              <span class="option-letter">A</span>
-            </div>
-            <span class="option-text">{{ getCurrentQuestion()?.optionA }}</span>
-          </div>
+        <!-- Question Type Badge -->
+        <div class="question-type-badge badge-3d mb-4 animate-slide-up-3d" style="animation-delay: 0.1s">
+          {{ getQuestionTypeLabel(getCurrentQuestion()?.questionType) }}
+        </div>
 
-          <div 
-            class="option-card"
-            [ngClass]="{ 
-              'selected': isAnswerSelected(getCurrentQuestion()!.id, 'B'),
-              'correct': isTestCompleted && getCurrentQuestion()?.correctAnswer === 'B',
-              'incorrect': isTestCompleted && isAnswerSelected(getCurrentQuestion()!.id, 'B') && getCurrentQuestion()?.correctAnswer !== 'B'
-            }"
-            (click)="selectAnswer(getCurrentQuestion()!.id, 'B')">
+        <!-- Multiple Choice Questions -->
+        <div *ngIf="isMultipleChoice(getCurrentQuestion()?.questionType)" class="options-grid grid-3d">
+          <div *ngFor="let option of getQuestionOptions(getCurrentQuestion()); let i = index"
+               class="option-card card-3d option-3d animate-scale-in-3d"
+               [style.animation-delay]="(0.1 * i) + 's'"
+               [ngClass]="{ 
+                 'selected': isOptionSelected(i),
+                 'correct': isTestCompleted && isCorrectOption(getCurrentQuestion(), i),
+                 'incorrect': isTestCompleted && isOptionSelected(i) && !isCorrectOption(getCurrentQuestion(), i)
+               }"
+               (click)="selectOption(i)">
             <div class="option-indicator">
-              <span class="option-letter">B</span>
+              <span class="option-letter">{{ getOptionLabel(i) }}</span>
             </div>
-            <span class="option-text">{{ getCurrentQuestion()?.optionB }}</span>
+            <span class="option-text">{{ option }}</span>
           </div>
+        </div>
 
-          <div 
-            class="option-card"
-            [ngClass]="{ 
-              'selected': isAnswerSelected(getCurrentQuestion()!.id, 'C'),
-              'correct': isTestCompleted && getCurrentQuestion()?.correctAnswer === 'C',
-              'incorrect': isTestCompleted && isAnswerSelected(getCurrentQuestion()!.id, 'C') && getCurrentQuestion()?.correctAnswer !== 'C'
-            }"
-            (click)="selectAnswer(getCurrentQuestion()!.id, 'C')">
+        <!-- True/False Questions -->
+        <div *ngIf="getCurrentQuestion()?.questionType === QuestionType.TRUE_FALSE" class="true-false-options grid-3d">
+          <div class="option-card card-3d option-3d animate-scale-in-3d"
+               [ngClass]="{ 
+                 'selected': userAnswers[getCurrentQuestion()!.id] === true,
+                 'correct': isTestCompleted && getCorrectBooleanAnswer(getCurrentQuestion()) === true,
+                 'incorrect': isTestCompleted && userAnswers[getCurrentQuestion()!.id] === true && getCorrectBooleanAnswer(getCurrentQuestion()) !== true
+               }"
+               (click)="selectBooleanAnswer(true)">
             <div class="option-indicator">
-              <span class="option-letter">C</span>
+              <span class="option-letter">T</span>
             </div>
-            <span class="option-text">{{ getCurrentQuestion()?.optionC }}</span>
+            <span class="option-text">True</span>
           </div>
-
-          <div 
-            class="option-card"
-            [ngClass]="{ 
-              'selected': isAnswerSelected(getCurrentQuestion()!.id, 'D'),
-              'correct': isTestCompleted && getCurrentQuestion()?.correctAnswer === 'D',
-              'incorrect': isTestCompleted && isAnswerSelected(getCurrentQuestion()!.id, 'D') && getCurrentQuestion()?.correctAnswer !== 'D'
-            }"
-            (click)="selectAnswer(getCurrentQuestion()!.id, 'D')">
+          <div class="option-card card-3d option-3d animate-scale-in-3d"
+               [ngClass]="{ 
+                 'selected': userAnswers[getCurrentQuestion()!.id] === false,
+                 'correct': isTestCompleted && getCorrectBooleanAnswer(getCurrentQuestion()) === false,
+                 'incorrect': isTestCompleted && userAnswers[getCurrentQuestion()!.id] === false && getCorrectBooleanAnswer(getCurrentQuestion()) !== false
+               }"
+               (click)="selectBooleanAnswer(false)"
+               style="animation-delay: 0.1s">
             <div class="option-indicator">
-              <span class="option-letter">D</span>
+              <span class="option-letter">F</span>
             </div>
-            <span class="option-text">{{ getCurrentQuestion()?.optionD }}</span>
+            <span class="option-text">False</span>
+          </div>
+        </div>
+
+        <!-- Yes/No Questions -->
+        <div *ngIf="getCurrentQuestion()?.questionType === QuestionType.YES_NO" class="yes-no-options grid-3d">
+          <div class="option-card card-3d option-3d animate-scale-in-3d"
+               [ngClass]="{ 
+                 'selected': userAnswers[getCurrentQuestion()!.id] === 'yes',
+                 'correct': isTestCompleted && getCorrectStringAnswer(getCurrentQuestion()) === 'yes',
+                 'incorrect': isTestCompleted && userAnswers[getCurrentQuestion()!.id] === 'yes' && getCorrectStringAnswer(getCurrentQuestion()) !== 'yes'
+               }"
+               (click)="selectStringAnswer('yes')">
+            <div class="option-indicator">
+              <span class="option-letter">Y</span>
+            </div>
+            <span class="option-text">Yes</span>
+          </div>
+          <div class="option-card card-3d option-3d animate-scale-in-3d"
+               [ngClass]="{ 
+                 'selected': userAnswers[getCurrentQuestion()!.id] === 'no',
+                 'correct': isTestCompleted && getCorrectStringAnswer(getCurrentQuestion()) === 'no',
+                 'incorrect': isTestCompleted && userAnswers[getCurrentQuestion()!.id] === 'no' && getCorrectStringAnswer(getCurrentQuestion()) !== 'no'
+               }"
+               (click)="selectStringAnswer('no')"
+               style="animation-delay: 0.1s">
+            <div class="option-indicator">
+              <span class="option-letter">N</span>
+            </div>
+            <span class="option-text">No</span>
+          </div>
+        </div>
+
+        <!-- Fill in the Blank -->
+        <div *ngIf="isFillInBlank(getCurrentQuestion()?.questionType)" class="fill-blank-input animate-slide-up-3d" style="animation-delay: 0.1s">
+          <input type="text" 
+                 class="form-input w-full p-4 border rounded-lg input-3d"
+                 placeholder="Enter your answer..."
+                 [(ngModel)]="userAnswers[getCurrentQuestion()!.id]"
+                 [disabled]="isTestCompleted">
+          <div *ngIf="isTestCompleted" class="correct-answers mt-4 card-3d-subtle p-4">
+            <strong>Correct Answer(s):</strong>
+            <div *ngFor="let answer of getCorrectAnswers(getCurrentQuestion())" class="correct-answer text-green-600">
+              {{ answer }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Matching Questions -->
+        <div *ngIf="isMatching(getCurrentQuestion()?.questionType)" class="matching-question animate-slide-up-3d" style="animation-delay: 0.1s">
+          <div class="matching-instructions mb-4 card-3d-subtle p-4">
+            <p>Match the items by selecting pairs. Click on items to create matches.</p>
+          </div>
+          <div class="matching-interface">
+            <div class="matching-columns grid-3d">
+              <div class="left-column card-3d p-4">
+                <h4>Items</h4>
+                <div *ngFor="let item of getLeftItems(getCurrentQuestion()); let i = index"
+                     class="matching-item card-3d-hover"
+                     [ngClass]="{ 'selected': selectedLeftItem === i }"
+                     (click)="selectLeftItem(i)">
+                  {{ item }}
+                </div>
+              </div>
+              <div class="right-column card-3d p-4">
+                <h4>Matches</h4>
+                <div *ngFor="let item of getRightItems(getCurrentQuestion()); let i = index"
+                     class="matching-item card-3d-hover"
+                     [ngClass]="{ 'selected': selectedRightItem === i }"
+                     (click)="selectRightItem(i)">
+                  {{ item }}
+                </div>
+              </div>
+            </div>
+            <div class="user-matches mt-4 card-3d-subtle p-4">
+              <h4>Your Matches:</h4>
+              <div *ngFor="let match of getUserMatches(); let i = index" class="user-match card-3d-subtle mb-2 p-2">
+                {{ match.left }} ↔ {{ match.right }}
+                <button (click)="removeMatch(i)" class="remove-match btn-3d btn-3d-danger small">×</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sequencing Questions -->
+        <div *ngIf="isSequencing(getCurrentQuestion()?.questionType)" class="sequencing-question animate-slide-up-3d" style="animation-delay: 0.1s">
+          <div class="sequencing-instructions mb-4 card-3d-subtle p-4">
+            <p>Drag and drop to arrange items in the correct order.</p>
+          </div>
+          <div class="sequencing-items">
+            <div *ngFor="let item of getSequenceItems(getCurrentQuestion()); let i = index"
+                 class="sequence-item card-3d-hover"
+                 [ngClass]="{ 'dragging': draggedItem === i }"
+                 draggable="true"
+                 (dragstart)="onDragStart(i)"
+                 (dragover)="onDragOver($event)"
+                 (drop)="onDrop(i)">
+              <span class="sequence-number">{{ i + 1 }}</span>
+              <span class="sequence-text">{{ item }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Short Answer -->
+        <div *ngIf="getCurrentQuestion()?.questionType === QuestionType.SHORT_ANSWER" class="short-answer-input animate-slide-up-3d" style="animation-delay: 0.1s">
+          <textarea class="form-textarea w-full p-4 border rounded-lg input-3d"
+                   rows="4"
+                   placeholder="Enter your short answer..."
+                   [(ngModel)]="userAnswers[getCurrentQuestion()!.id]"
+                   [disabled]="isTestCompleted"></textarea>
+          <div *ngIf="isTestCompleted" class="sample-answers mt-4 card-3d-subtle p-4">
+            <strong>Sample Answer(s):</strong>
+            <div *ngFor="let answer of getCorrectAnswers(getCurrentQuestion())" class="sample-answer text-blue-600">
+              {{ answer }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Essay -->
+        <div *ngIf="getCurrentQuestion()?.questionType === QuestionType.ESSAY" class="essay-input animate-slide-up-3d" style="animation-delay: 0.1s">
+          <textarea class="form-textarea w-full p-4 border rounded-lg input-3d"
+                   rows="8"
+                   placeholder="Write your essay response..."
+                   [(ngModel)]="userAnswers[getCurrentQuestion()!.id]"
+                   [disabled]="isTestCompleted"></textarea>
+          <div class="essay-info mt-4 card-3d-subtle p-4">
+            <p class="text-sm text-gray-600">
+              <strong>Note:</strong> Essay questions will be manually graded by your instructor.
+            </p>
           </div>
         </div>
       </div>
 
       <!-- Navigation -->
-      <div class="navigation-section">
+      <div class="navigation-section animate-slide-up-3d" style="animation-delay: 0.4s">
         <div class="nav-buttons flex justify-between items-center">
           <button 
-            class="btn btn-secondary"
+            class="btn-3d btn-3d-secondary"
             [disabled]="currentQuestionIndex === 0"
             (click)="previousQuestion()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -136,7 +257,7 @@
           <div class="question-indicators flex gap-2">
             <div 
               *ngFor="let question of questions; let i = index"
-              class="question-dot"
+              class="question-dot indicator-3d"
               [ngClass]="{
                 'current': i === currentQuestionIndex,
                 'answered': selectedAnswers[question.id] !== undefined,
@@ -148,7 +269,7 @@
           </div>
 
           <button 
-            class="btn btn-primary"
+            class="btn-3d btn-3d-primary"
             *ngIf="currentQuestionIndex < questions.length - 1"
             (click)="nextQuestion()">
             Next
@@ -158,7 +279,7 @@
           </button>
 
           <button 
-            class="btn btn-primary"
+            class="btn-3d btn-3d-primary pulse-3d"
             *ngIf="currentQuestionIndex === questions.length - 1"
             (click)="confirmSubmit()"
             [disabled]="isTestCompleted">
@@ -174,9 +295,9 @@
 
   <!-- Empty State -->
   <div *ngIf="!isLoading && questions.length === 0" class="empty-container">
-    <div class="container">
-      <div class="empty-card card p-8 text-center">
-        <div class="empty-icon mb-4">
+    <div class="container-3d">
+      <div class="empty-card card-3d-elevated p-8 text-center animate-fade-in-3d">
+        <div class="empty-icon mb-4 float-3d">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14,2 14,8 20,8"/>
@@ -186,8 +307,8 @@
           </svg>
         </div>
         <h3 class="text-xl font-semibold mb-2">No questions available</h3>
-        <p class="text-secondary mb-6">This test doesn't have any questions yet.</p>
-        <button class="btn btn-primary" (click)="goBackToDashboard()">
+        <p class="text-secondary mb-6 animate-slide-up-3d" style="animation-delay: 0.1s">This test doesn't have any questions yet.</p>
+        <button class="btn-3d btn-3d-primary animate-scale-in-3d" (click)="goBackToDashboard()" style="animation-delay: 0.2s">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"/>
           </svg>

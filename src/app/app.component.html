@@ -1,26 +1,28 @@
 <!-- Modern App Layout -->
 <div class="app-container">
   
-  <!-- Navigation Header -->
+  <!-- Modern Guest Navigation Header -->
   <header class="modern-header" 
           [class.header-hidden]="!isHeaderVisible"
           *ngIf="!isUserLoggedIn && !isAdminLoggedIn">
     <div class="header-content">
       <div class="logo-section">
         <h1 class="logo" routerLink="/">
-          <span class="logo-icon">Quiz.</span>
-          <span class="logo-text"></span>
+          <div class="logo-icon">
+            <span nz-icon nzType="bulb" nzTheme="fill"></span>
+          </div>
+          <span class="logo-text">Quiz.</span>
         </h1>
       </div>
       
       <nav class="nav-section">
         <app-theme-toggle></app-theme-toggle>
         <a class="nav-link" routerLink="/register" routerLinkActive="active">
-          <span nz-icon nzType="user-add"></span>
+          <span nz-icon nzType="user-add" nzTheme="outline"></span>
           Sign Up
         </a>
         <a class="nav-link primary" routerLink="/login" routerLinkActive="active">
-          <span nz-icon nzType="login"></span>
+          <span nz-icon nzType="login" nzTheme="outline"></span>
           Log In
         </a>
       </nav>
@@ -34,21 +36,118 @@
     <div class="header-content">
       <div class="logo-section">
         <h1 class="logo" routerLink="/admin/dashboard">
-          <span class="logo-icon">QuizMaster</span>
-          <span class="logo-text"></span>
+          <div class="logo-icon">
+            <span nz-icon nzType="crown" nzTheme="fill"></span>
+          </div>
+          <span class="logo-text">Quiz.</span>
         </h1>
       </div>
       
-      <nav class="nav-section">
-        <div class="user-menu">
-          <app-theme-toggle></app-theme-toggle>
-          <div class="user-info">
-            <span class="user-avatar">👨‍💼</span>
-            <span class="user-name">{{ adminName }}</span>
+      <!-- Enhanced Search Bar -->
+      <div class="header-search" *ngIf="router.url === '/admin/dashboard'">
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <span nz-icon nzType="search" class="search-icon"></span>
+            <input 
+              type="text" 
+              class="search-input"
+              placeholder="Search tests by title or description..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearchInput()"
+              (keyup.enter)="performSearch()">
+            <button 
+              *ngIf="searchQuery" 
+              class="clear-search-btn" 
+              (click)="clearSearch()"
+              title="Clear search">
+              <span nz-icon nzType="close-circle" nzTheme="fill"></span>
+            </button>
           </div>
-          <button class="logout-btn" (click)="logout()" title="Logout">
-            <span nz-icon nzType="logout"></span>
-          </button>
+        </div>
+      </div>
+      
+      <nav class="nav-section">
+        <div class="action-controls">
+          <!-- Enhanced Admin Actions Dropdown - Integrated with User Profile -->
+          <div class="header-divider"></div>
+          
+          <app-theme-toggle></app-theme-toggle>
+          
+          <!-- Combined User Profile with Actions -->
+          <div class="user-profile-actions" nz-dropdown [nzDropdownMenu]="adminProfileMenu" nzPlacement="bottomRight">
+            <div class="user-profile-btn">
+              <div class="user-avatar-container">
+                <span nz-icon nzType="user" nzTheme="fill" class="user-avatar-icon"></span>
+              </div>
+              <div class="user-details">
+                <span class="user-name">Quiz Admin</span>
+                <span class="user-role">Administrator</span>
+              </div>
+              <span nz-icon nzType="down" class="profile-dropdown-arrow"></span>
+            </div>
+          </div>
+          
+          <nz-dropdown-menu #adminProfileMenu="nzDropdownMenu">
+            <ul nz-menu class="enhanced-profile-menu">
+              <!-- Admin Actions Section -->
+              <li nz-menu-group nzTitle="Actions">
+                <ul>
+                  <li nz-menu-item routerLink="/admin/create-test">
+                    <div class="menu-item-content">
+                      <span nz-icon nzType="file-add" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">Create New Test</span>
+                        <span class="menu-subtitle">Build a new quiz</span>
+                      </div>
+                    </div>
+                  </li>
+                  <li nz-menu-item routerLink="/admin/view-test-results">
+                    <div class="menu-item-content">
+                      <span nz-icon nzType="bar-chart" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">View Results</span>
+                        <span class="menu-subtitle">Analytics & reports</span>
+                      </div>
+                    </div>
+                  </li>
+                  <li nz-menu-item routerLink="/admin/user-management">
+                    <div class="menu-item-content">
+                      <span nz-icon nzType="team" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">Manage Users</span>
+                        <span class="menu-subtitle">User administration</span>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+              <!-- Divider -->
+              <li nz-menu-divider></li>
+              <!-- Account Section -->
+              <li nz-menu-group nzTitle="Account">
+                <ul>
+                  <li nz-menu-item>
+                    <div class="menu-item-content">
+                      <span nz-icon nzType="setting" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">Settings</span>
+                        <span class="menu-subtitle">Account preferences</span>
+                      </div>
+                    </div>
+                  </li>
+                  <li nz-menu-item (click)="logout()">
+                    <div class="menu-item-content logout-item">
+                      <span nz-icon nzType="logout" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">Logout</span>
+                        <span class="menu-subtitle">Sign out of account</span>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </nz-dropdown-menu>
         </div>
       </nav>
     </div>
@@ -61,21 +160,117 @@
     <div class="header-content">
       <div class="logo-section">
         <h1 class="logo" routerLink="/user/dashboard">
-          <span class="logo-icon">🎓</span>
-          <span class="logo-text">Take a Quiz</span>
+          <div class="logo-icon">
+            <span nz-icon nzType="book" nzTheme="fill"></span>
+          </div>
+          <span class="logo-text">Quiz.</span>
         </h1>
       </div>
       
-      <nav class="nav-section">
-        <div class="user-menu">
-          <app-theme-toggle></app-theme-toggle>
-          <div class="user-info">
-            <span class="user-avatar">👤</span>
-            <span class="user-name">{{ currentUser || 'Student' }}</span>
+      <!-- Enhanced Search Bar -->
+      <div class="header-search" *ngIf="router.url === '/user/dashboard'">
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <span nz-icon nzType="search" class="search-icon"></span>
+            <input 
+              type="text" 
+              class="search-input"
+              placeholder="Search tests by title or description..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearchInput()"
+              (keyup.enter)="performSearch()">
+            <button 
+              *ngIf="searchQuery" 
+              class="clear-search-btn" 
+              (click)="clearSearch()"
+              title="Clear search">
+              <span nz-icon nzType="close-circle" nzTheme="fill"></span>
+            </button>
           </div>
-          <button class="logout-btn" (click)="logout()" title="Logout">
-            <span nz-icon nzType="logout"></span>
-          </button>
+        </div>
+      </div>
+      
+      <nav class="nav-section">
+        <div class="action-controls">
+          <!-- Enhanced User Actions Dropdown - Integrated with User Profile -->
+          <div class="header-divider"></div>
+          
+          <app-theme-toggle></app-theme-toggle>
+          
+          <!-- Combined User Profile with Actions -->
+          <div class="user-profile-actions" nz-dropdown [nzDropdownMenu]="userProfileMenu" nzPlacement="bottomRight">
+            <div class="user-profile-btn">
+              <div class="user-avatar-container">
+                <span nz-icon nzType="user" nzTheme="fill" class="user-avatar-icon"></span>
+              </div>
+              <div class="user-details">
+                <span class="user-name">{{ currentUser || 'Student' }}</span>
+              </div>
+              <span nz-icon nzType="down" class="profile-dropdown-arrow"></span>
+            </div>
+          </div>
+          
+          <nz-dropdown-menu #userProfileMenu="nzDropdownMenu">
+            <ul nz-menu class="enhanced-profile-menu">
+              <!-- User Actions Section -->
+              <li nz-menu-group nzTitle="Dashboard">
+                <ul>
+                  <li nz-menu-item routerLink="/user/my-tests">
+                    <div class="menu-item-content">
+                      <span nz-icon nzType="file-add" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">Create New Test</span>
+                        <span class="menu-subtitle">Build a new quiz</span>
+                      </div>
+                    </div>
+                  </li>
+                  <li nz-menu-item routerLink="/user/my-tests">
+                    <div class="menu-item-content">
+                      <span nz-icon nzType="file-text" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">My Tests</span>
+                        <span class="menu-subtitle">View test history</span>
+                      </div>
+                    </div>
+                  </li>
+                  <li nz-menu-item routerLink="/user/view-test-results">
+                    <div class="menu-item-content">
+                      <span nz-icon nzType="trophy" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">My Results</span>
+                        <span class="menu-subtitle">View test scores</span>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+              <!-- Divider -->
+              <li nz-menu-divider></li>
+              <!-- Account Section -->
+              <li nz-menu-group nzTitle="Account">
+                <ul>
+                  <li nz-menu-item>
+                    <div class="menu-item-content">
+                      <span nz-icon nzType="setting" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">Settings</span>
+                        <span class="menu-subtitle">Account preferences</span>
+                      </div>
+                    </div>
+                  </li>
+                  <li nz-menu-item (click)="logout()">
+                    <div class="menu-item-content logout-item">
+                      <span nz-icon nzType="logout" nzTheme="outline"></span>
+                      <div class="menu-item-text">
+                        <span class="menu-title">Logout</span>
+                        <span class="menu-subtitle">Sign out of account</span>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </nz-dropdown-menu>
         </div>
       </nav>
     </div>

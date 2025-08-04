@@ -3,16 +3,24 @@ import { Router, RouterOutlet } from '@angular/router';
 import { SharedModule } from './modules/shared/shared-module';
 import { UserStorageService } from './modules/shared/auth/services/user-storage.service';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzButtonModule } from 'ng-zorro-antd/button';
+import { NzDropDownModule } from 'ng-zorro-antd/dropdown';
+import { NzMenuModule } from 'ng-zorro-antd/menu';
 import { ThemeService } from './services/theme.service';
 import { ThemeToggleComponent } from './components/theme-toggle/theme-toggle.component';
+import { AdminService } from './modules/admin/services/admin.service';
+import { Test } from './modules/user/services/test';
+import { Subject, BehaviorSubject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
-  imports: [RouterOutlet, SharedModule, CommonModule, NzIconModule, ThemeToggleComponent]
+  imports: [RouterOutlet, SharedModule, CommonModule, FormsModule, NzIconModule, NzButtonModule, NzDropDownModule, NzMenuModule, ThemeToggleComponent]
 })
 export class AppComponent implements OnInit {
   title = 'QuizWeb';
@@ -23,10 +31,30 @@ export class AppComponent implements OnInit {
   private scrollThreshold = 20; // Reduced threshold for more responsive behavior
   private ticking = false; // For scroll throttling
 
+  // Search functionality
+  searchQuery = '';
+  searchLoading = false;
+  private searchSubject = new Subject<string>();
+  
+  // Create a static search subject for cross-component communication
+  static searchQuery$ = new BehaviorSubject<string>('');
+
   constructor(
-    private router: Router,
-    private themeService: ThemeService
-  ) {}
+    public router: Router,
+    private themeService: ThemeService,
+    private adminService: AdminService,
+    private userTestService: Test
+  ) {
+    // Set up search debouncing
+    this.searchSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(query => {
+        AppComponent.searchQuery$.next(query);
+      });
+  }
 
   ngOnInit(): void {
     this.isUserLoggedIn = UserStorageService.getUserRole() === 'USER';
@@ -122,5 +150,38 @@ export class AppComponent implements OnInit {
 
   get userRole() {
     return UserStorageService.getUserRole();
+  }
+
+  // Search functionality methods
+  onSearchInput(): void {
+    this.searchSubject.next(this.searchQuery);
+  }
+
+  performSearch(): void {
+    if (!this.searchQuery.trim()) {
+      this.clearSearch();
+      return;
+    }
+    
+    this.searchLoading = true;
+    
+    // Emit search query immediately
+    AppComponent.searchQuery$.next(this.searchQuery);
+    
+    // Simulate search completion after a short delay
+    setTimeout(() => {
+      this.searchLoading = false;
+    }, 500);
+  }
+
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchLoading = false;
+    AppComponent.searchQuery$.next('');
+  }
+
+  // Static method to get search observable for other components
+  static getSearchQuery$() {
+    return AppComponent.searchQuery$.asObservable();
   }
 }

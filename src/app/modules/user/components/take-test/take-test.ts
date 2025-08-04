@@ -1,19 +1,12 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { Test } from '../../services/test';
 import { UserStorageService } from '../../../shared/auth/services/user-storage.service';
-
-interface Question {
-  id: number;
-  questionText: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
-  correctAnswer?: string;
-}
+import { Question } from '../../../shared/interfaces/question.interface';
+import { QuestionType } from '../../../shared/enums/question-types.enum';
 
 interface TestData {
   id: number;
@@ -26,7 +19,7 @@ interface TestData {
 @Component({
   selector: 'app-take-test',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './take-test.html',
   styleUrls: ['./take-test.scss']
 })
@@ -36,8 +29,8 @@ export class TakeTest implements OnInit, OnDestroy {
   testId: number;
   isLoading = false;
   currentQuestionIndex = 0;
-  selectedAnswers: { [key: number]: string } = {};
-  userAnswers: { [key: number]: string } = {}; // Added for template compatibility
+  selectedAnswers: { [key: number]: any } = {}; // Changed to any to support different answer types
+  userAnswers: { [key: number]: any } = {}; // Changed to any for template compatibility
   timeRemaining = 0;
   totalTestTime = 0;
   testStartTime: number = 0;
@@ -45,6 +38,7 @@ export class TakeTest implements OnInit, OnDestroy {
   isTestCompleted = false;
   isTimerWarning = false;
   private storageKey = '';
+  QuestionType = QuestionType; // Make enum available in template
 
   constructor(
     private activatedRoute: ActivatedRoute,
@@ -192,6 +186,11 @@ export class TakeTest implements OnInit, OnDestroy {
     localStorage.setItem(answersKey, JSON.stringify(this.selectedAnswers));
   }
 
+  private saveAnswersToStorage(): void {
+    const answersKey = `test_answers_${this.testId}`;
+    localStorage.setItem(answersKey, JSON.stringify(this.selectedAnswers));
+  }
+
   selectAnswer(questionId: number, selectedOption: string): void {
     console.log(`Selecting answer for question ${questionId}: ${selectedOption}`); // Debug log
     
@@ -279,7 +278,7 @@ export class TakeTest implements OnInit, OnDestroy {
     // Calculate score locally for immediate feedback
     const correctAnswers = this.questions.filter((question, index) => {
       const selectedLetter = this.selectedAnswers[question.id]; // Use question.id, not index
-      const correctAnswer = question.correctAnswer; // This is already in letter format (A, B, C, D)
+      const correctAnswer = this.getCorrectAnswerForScoring(question); // Use helper method to get correct answer
       const isCorrect = selectedLetter === correctAnswer;
       
       console.log(`Question ${index + 1}:`, {
@@ -469,5 +468,274 @@ export class TakeTest implements OnInit, OnDestroy {
       this.message.warning(`You have ${unansweredCount} unanswered questions. Submitting anyway...`);
     }
     this.submitTest();
+  }
+
+  // Additional properties for new question types
+  selectedLeftItem: number | null = null;
+  selectedRightItem: number | null = null;
+  draggedItem: number | null = null;
+
+  // Helper methods for new question types
+  getQuestionTypeLabel(questionType: QuestionType | undefined): string {
+    if (!questionType) return 'Unknown';
+    const labels: Record<QuestionType, string> = {
+      [QuestionType.MULTIPLE_CHOICE_SINGLE]: 'Multiple Choice',
+      [QuestionType.MULTIPLE_CHOICE_MULTIPLE]: 'Multiple Select',
+      [QuestionType.MULTIPLE_CHOICE_BEST]: 'Best Answer',
+      [QuestionType.TRUE_FALSE]: 'True/False',
+      [QuestionType.YES_NO]: 'Yes/No',
+      [QuestionType.FILL_IN_THE_BLANK]: 'Fill in the Blank',
+      [QuestionType.FILL_IN_THE_BLANK_PHRASE]: 'Fill in the Phrase',
+      [QuestionType.MATCHING]: 'Matching',
+      [QuestionType.MATCHING_ONE_TO_MANY]: 'Matching (Multiple)',
+      [QuestionType.SEQUENCING]: 'Sequencing',
+      [QuestionType.ORDERING_CHRONOLOGICAL]: 'Chronological Order',
+      [QuestionType.SHORT_ANSWER]: 'Short Answer',
+      [QuestionType.ESSAY]: 'Essay'
+    };
+    return labels[questionType] || 'Unknown';
+  }
+
+  isMultipleChoice(questionType: QuestionType | undefined): boolean {
+    if (!questionType) return false;
+    return [
+      QuestionType.MULTIPLE_CHOICE_SINGLE,
+      QuestionType.MULTIPLE_CHOICE_MULTIPLE,
+      QuestionType.MULTIPLE_CHOICE_BEST
+    ].includes(questionType);
+  }
+
+  isFillInBlank(questionType: QuestionType | undefined): boolean {
+    if (!questionType) return false;
+    return [
+      QuestionType.FILL_IN_THE_BLANK,
+      QuestionType.FILL_IN_THE_BLANK_PHRASE
+    ].includes(questionType);
+  }
+
+  isMatching(questionType: QuestionType | undefined): boolean {
+    if (!questionType) return false;
+    return [
+      QuestionType.MATCHING,
+      QuestionType.MATCHING_ONE_TO_MANY
+    ].includes(questionType);
+  }
+
+  isSequencing(questionType: QuestionType | undefined): boolean {
+    if (!questionType) return false;
+    return [
+      QuestionType.SEQUENCING,
+      QuestionType.ORDERING_CHRONOLOGICAL
+    ].includes(questionType);
+  }
+
+  getQuestionOptions(question: Question | null): string[] {
+    if (!question || !this.isMultipleChoice(question.questionType)) return [];
+    const anyQuestion = question as any;
+    return anyQuestion.options || [anyQuestion.optionA, anyQuestion.optionB, anyQuestion.optionC, anyQuestion.optionD].filter(Boolean);
+  }
+
+  getOptionLabel(index: number): string {
+    return String.fromCharCode(65 + index); // A, B, C, D
+  }
+
+  isOptionSelected(optionIndex: number): boolean {
+    const question = this.getCurrentQuestion();
+    if (!question) return false;
+    const answer = this.userAnswers[question.id];
+    return answer === optionIndex || answer === this.getOptionLabel(optionIndex);
+  }
+
+  isCorrectOption(question: Question | null, optionIndex: number): boolean {
+    if (!question) return false;
+    const anyQuestion = question as any;
+    if (anyQuestion.correctAnswers && Array.isArray(anyQuestion.correctAnswers)) {
+      return anyQuestion.correctAnswers.includes(optionIndex.toString()) || 
+             anyQuestion.correctAnswers.includes(this.getOptionLabel(optionIndex));
+    }
+    if (anyQuestion.correctAnswer) {
+      return anyQuestion.correctAnswer === this.getOptionLabel(optionIndex);
+    }
+    return false;
+  }
+
+  selectOption(optionIndex: number): void {
+    const question = this.getCurrentQuestion();
+    if (!question || this.isTestCompleted) return;
+    
+    if (question.questionType === QuestionType.MULTIPLE_CHOICE_MULTIPLE) {
+      // Handle multiple selection
+      let answers = this.userAnswers[question.id] || [];
+      if (!Array.isArray(answers)) answers = [];
+      
+      const optionLabel = this.getOptionLabel(optionIndex);
+      if (answers.includes(optionLabel)) {
+        answers = answers.filter((a: string) => a !== optionLabel);
+      } else {
+        answers.push(optionLabel);
+      }
+      this.userAnswers[question.id] = answers;
+      this.selectedAnswers[question.id] = answers;
+    } else {
+      // Single selection
+      const optionLabel = this.getOptionLabel(optionIndex);
+      this.userAnswers[question.id] = optionLabel;
+      this.selectedAnswers[question.id] = optionLabel;
+    }
+    this.saveAnswersToStorage();
+  }
+
+  selectBooleanAnswer(value: boolean): void {
+    const question = this.getCurrentQuestion();
+    if (!question || this.isTestCompleted) return;
+    this.userAnswers[question.id] = value;
+    this.selectedAnswers[question.id] = value;
+    this.saveAnswersToStorage();
+  }
+
+  selectStringAnswer(value: string): void {
+    const question = this.getCurrentQuestion();
+    if (!question || this.isTestCompleted) return;
+    this.userAnswers[question.id] = value;
+    this.selectedAnswers[question.id] = value;
+    this.saveAnswersToStorage();
+  }
+
+  getCorrectBooleanAnswer(question: Question | null): boolean | null {
+    if (!question) return null;
+    const anyQuestion = question as any;
+    return anyQuestion.correctAnswer;
+  }
+
+  getCorrectStringAnswer(question: Question | null): string {
+    if (!question) return '';
+    const anyQuestion = question as any;
+    return anyQuestion.correctAnswer?.toString() || '';
+  }
+
+  getCorrectAnswers(question: Question | null): string[] {
+    if (!question) return [];
+    const anyQuestion = question as any;
+    if (anyQuestion.correctAnswers && Array.isArray(anyQuestion.correctAnswers)) {
+      return anyQuestion.correctAnswers;
+    }
+    if (anyQuestion.correctAnswer) {
+      return [anyQuestion.correctAnswer.toString()];
+    }
+    return [];
+  }
+
+  // Helper method to get correct answer for scoring (returns first correct answer as string)
+  getCorrectAnswerForScoring(question: Question | null): string {
+    if (!question) return '';
+    const anyQuestion = question as any;
+    
+    // For multiple choice questions, get the first correct answer
+    if (anyQuestion.correctAnswers && Array.isArray(anyQuestion.correctAnswers) && anyQuestion.correctAnswers.length > 0) {
+      return anyQuestion.correctAnswers[0].toString();
+    }
+    
+    // For true/false, yes/no questions, return as string
+    if (anyQuestion.correctAnswer !== undefined) {
+      return anyQuestion.correctAnswer.toString();
+    }
+    
+    return '';
+  }
+
+  // Matching question methods
+  getLeftItems(question: Question | null): string[] {
+    if (!question) return [];
+    const anyQuestion = question as any;
+    return anyQuestion.leftItems || [];
+  }
+
+  getRightItems(question: Question | null): string[] {
+    if (!question) return [];
+    const anyQuestion = question as any;
+    return anyQuestion.rightItems || [];
+  }
+
+  selectLeftItem(index: number): void {
+    this.selectedLeftItem = index;
+    this.tryCreateMatch();
+  }
+
+  selectRightItem(index: number): void {
+    this.selectedRightItem = index;
+    this.tryCreateMatch();
+  }
+
+  tryCreateMatch(): void {
+    if (this.selectedLeftItem !== null && this.selectedRightItem !== null) {
+      const question = this.getCurrentQuestion();
+      if (!question) return;
+
+      const leftItems = this.getLeftItems(question);
+      const rightItems = this.getRightItems(question);
+      
+      if (!this.userAnswers[question.id]) {
+        this.userAnswers[question.id] = [];
+      }
+      
+      this.userAnswers[question.id].push({
+        left: leftItems[this.selectedLeftItem],
+        right: rightItems[this.selectedRightItem]
+      });
+      
+      this.selectedLeftItem = null;
+      this.selectedRightItem = null;
+      this.saveAnswersToStorage();
+    }
+  }
+
+  getUserMatches(): { left: string, right: string }[] {
+    const question = this.getCurrentQuestion();
+    if (!question) return [];
+    return this.userAnswers[question.id] || [];
+  }
+
+  removeMatch(index: number): void {
+    const question = this.getCurrentQuestion();
+    if (!question || this.isTestCompleted) return;
+    
+    if (this.userAnswers[question.id]) {
+      this.userAnswers[question.id].splice(index, 1);
+      this.saveAnswersToStorage();
+    }
+  }
+
+  // Sequencing question methods
+  getSequenceItems(question: Question | null): string[] {
+    if (!question) return [];
+    const anyQuestion = question as any;
+    return this.userAnswers[question.id] || anyQuestion.sequenceItems || [];
+  }
+
+  onDragStart(index: number): void {
+    this.draggedItem = index;
+  }
+
+  onDragOver(event: Event): void {
+    event.preventDefault();
+  }
+
+  onDrop(dropIndex: number): void {
+    if (this.draggedItem === null || this.isTestCompleted) return;
+    
+    const question = this.getCurrentQuestion();
+    if (!question) return;
+
+    const items = [...this.getSequenceItems(question)];
+    const draggedItemContent = items[this.draggedItem];
+    
+    // Remove the dragged item and insert it at the new position
+    items.splice(this.draggedItem, 1);
+    items.splice(dropIndex, 0, draggedItemContent);
+    
+    this.userAnswers[question.id] = items;
+    this.selectedAnswers[question.id] = items;
+    this.draggedItem = null;
+    this.saveAnswersToStorage();
   }
 }

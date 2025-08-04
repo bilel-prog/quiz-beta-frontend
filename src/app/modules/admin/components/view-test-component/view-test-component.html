@@ -1,33 +1,92 @@
-<div class="questions-grid"> <div class="question-card" *ngFor="let question of questions"> <h3 class="question-text">{{ question.questionText }}</h3>
-<div
-  class="option"
-  [ngClass]="{ correct: question.correctAnswer === 'A' }"
->
-  <span class="label">A.</span> {{ question.optionA }}
-  <span class="check-icon" *ngIf="question.correctAnswer === 'A'">✔</span>
-</div>
+<div class="questions-grid">
+  <div class="question-card" *ngFor="let question of questions">
+    <h3 class="question-text">{{ question.questionText }}</h3>
+    <div class="question-type-badge">{{ getQuestionTypeLabel(question.questionType) }}</div>
+    
+    <!-- Multiple Choice Questions -->
+    <div *ngIf="isMultipleChoice(question.questionType)" class="multiple-choice-options">
+      <div *ngFor="let option of getQuestionOptions(question); let i = index"
+           class="option"
+           [ngClass]="{ correct: isCorrectOption(question, i) }">
+        <span class="label">{{ getOptionLabel(i) }}.</span> {{ option }}
+        <span class="check-icon" *ngIf="isCorrectOption(question, i)">✔</span>
+      </div>
+    </div>
 
-<div
-  class="option"
-  [ngClass]="{ correct: question.correctAnswer === 'B' }"
->
-  <span class="label">B.</span> {{ question.optionB }}
-  <span class="check-icon" *ngIf="question.correctAnswer === 'B'">✔</span>
-</div>
+    <!-- True/False Questions -->
+    <div *ngIf="question.questionType === QuestionType.TRUE_FALSE" class="true-false-options">
+      <div class="option" [ngClass]="{ correct: getCorrectAnswer(question) === 'true' }">
+        <span class="label">True</span>
+        <span class="check-icon" *ngIf="getCorrectAnswer(question) === 'true'">✔</span>
+      </div>
+      <div class="option" [ngClass]="{ correct: getCorrectAnswer(question) === 'false' }">
+        <span class="label">False</span>
+        <span class="check-icon" *ngIf="getCorrectAnswer(question) === 'false'">✔</span>
+      </div>
+    </div>
 
-<div
-  class="option"
-  [ngClass]="{ correct: question.correctAnswer === 'C' }"
->
-  <span class="label">C.</span> {{ question.optionC }}
-  <span class="check-icon" *ngIf="question.correctAnswer === 'C'">✔</span>
-</div>
+    <!-- Yes/No Questions -->
+    <div *ngIf="question.questionType === QuestionType.YES_NO" class="yes-no-options">
+      <div class="option" [ngClass]="{ correct: getCorrectAnswer(question) === 'yes' }">
+        <span class="label">Yes</span>
+        <span class="check-icon" *ngIf="getCorrectAnswer(question) === 'yes'">✔</span>
+      </div>
+      <div class="option" [ngClass]="{ correct: getCorrectAnswer(question) === 'no' }">
+        <span class="label">No</span>
+        <span class="check-icon" *ngIf="getCorrectAnswer(question) === 'no'">✔</span>
+      </div>
+    </div>
 
-<div
-  class="option"
-  [ngClass]="{ correct: question.correctAnswer === 'D' }"
->
-  <span class="label">D.</span> {{ question.optionD }}
-  <span class="check-icon" *ngIf="question.correctAnswer === 'D'">✔</span>
+    <!-- Fill in the Blank -->
+    <div *ngIf="question.questionType === QuestionType.FILL_IN_THE_BLANK || question.questionType === QuestionType.FILL_IN_THE_BLANK_PHRASE" class="fill-blank">
+      <div class="correct-answers">
+        <strong>Correct Answer(s):</strong>
+        <div *ngFor="let answer of getCorrectAnswers(question)" class="correct-answer">
+          {{ answer }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Matching Questions -->
+    <div *ngIf="question.questionType === QuestionType.MATCHING || question.questionType === QuestionType.MATCHING_ONE_TO_MANY" class="matching">
+      <div class="matching-pairs">
+        <strong>Correct Matches:</strong>
+        <div *ngFor="let pair of getMatchingPairs(question)" class="matching-pair">
+          {{ pair.left }} → {{ pair.right }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sequencing Questions -->
+    <div *ngIf="question.questionType === QuestionType.SEQUENCING || question.questionType === QuestionType.ORDERING_CHRONOLOGICAL" class="sequencing">
+      <div class="sequence-items">
+        <strong>Correct Order:</strong>
+        <div *ngFor="let item of getSequenceItems(question); let i = index" class="sequence-item">
+          {{ i + 1 }}. {{ item }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Short Answer -->
+    <div *ngIf="question.questionType === QuestionType.SHORT_ANSWER" class="short-answer">
+      <div class="sample-answers">
+        <strong>Sample Answer(s):</strong>
+        <div *ngFor="let answer of getCorrectAnswers(question)" class="sample-answer">
+          {{ answer }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Essay -->
+    <div *ngIf="question.questionType === QuestionType.ESSAY" class="essay">
+      <div class="essay-info">
+        <strong>Essay Question</strong>
+        <p>This question requires manual grading by the instructor.</p>
+        <div *ngIf="getEssayGuidelines(question)" class="essay-guidelines">
+          <strong>Guidelines:</strong>
+          <p>{{ getEssayGuidelines(question) }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-</div> </div>

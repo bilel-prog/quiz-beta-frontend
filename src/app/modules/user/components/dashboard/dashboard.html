@@ -1,41 +1,32 @@
-<div class="dashboard-container">
-  <!-- Header -->
-  <div class="dashboard-header">
-    <div class="container">
-      <div class="header-content">
-        <div class="header-text">
-          <h1 class="text-3xl font-bold text-primary mb-2">Available Tests</h1>
-          <p class="text-secondary">Choose a test to begin your quiz session</p>
-        </div>
-        <div class="header-actions">
-          <button class="btn btn-default" routerLink="/user/view-test-results">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <path d="M16 10a4 4 0 01-8 0"/>
-            </svg>
-            My Results
-          </button>
-        </div>
+<div class="dashboard-container perspective">
+  <!-- Page Title Section with 3D enhancement -->
+  <div class="page-title-section animate-fade-in-3d">
+    <div class="container-3d">
+      <h1 class="text-3xl font-bold text-primary mb-2 float-3d">Available Tests</h1>
+      <p class="text-secondary">Choose a test to begin your quiz session</p>
+      
+      <!-- Search Results Info -->
+      <div *ngIf="searchQuery && searchResults.length === 0 && !isSearching && hasSearched" class="search-no-results">
+        <p class="text-secondary">No tests found matching "{{ searchQuery }}"</p>
       </div>
     </div>
   </div>
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="loading-container">
-    <div class="container">
-      <div class="loading-card card p-8 text-center">
-        <div class="loading-spinner"></div>
+  <!-- Loading State with 3D enhancement -->
+  <div *ngIf="isLoading" class="loading-container animate-slide-up-3d">
+    <div class="container-3d">
+      <div class="loading-card card-3d p-8 text-center">
+        <div class="loading-spinner animate-bounce-3d"></div>
         <p class="text-secondary">Loading tests...</p>
       </div>
     </div>
   </div>
 
-  <!-- Empty State -->
-  <div *ngIf="!isLoading && tests.length === 0" class="empty-container">
-    <div class="container">
-      <div class="empty-card card p-8 text-center">
-        <div class="empty-icon mb-4">
+  <!-- Empty State with 3D enhancement -->
+  <div *ngIf="!isLoading && tests.length === 0" class="empty-container animate-slide-up-3d">
+    <div class="container-3d">
+      <div class="empty-card card-3d card-3d-elevated p-8 text-center">
+        <div class="empty-icon mb-4 animate-bounce-3d">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
             <polyline points="14,2 14,8 20,8"/>
@@ -46,46 +37,56 @@
         </div>
         <h3 class="text-xl font-semibold mb-2">No tests available</h3>
         <p class="text-secondary mb-6">Check back later for new quizzes</p>
-        <button class="btn btn-primary" (click)="refreshTests()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="23 4 23 10 17 10"/>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-          </svg>
+        <button class="btn-3d btn-3d-secondary" (click)="refreshTests()">
+          <span nz-icon nzType="reload" nzTheme="outline" class="mr-2"></span>
           Refresh
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Tests Grid -->
-  <div *ngIf="!isLoading && tests.length > 0" class="tests-container">
-    <div class="container">
-      <!-- Stats Summary -->
-      <div class="stats-grid mb-8" *ngIf="tests.length > 0">
-        <div class="stat-card card p-4">
+  <!-- Tests Grid with 3D enhancement -->
+  <div *ngIf="!isLoading && tests.length > 0" class="tests-container animate-slide-up-3d">
+    <div class="container-3d">
+      <!-- Stats Summary with 3D cards -->
+      <div class="stats-grid mb-8 grid-3d grid-3d-3" *ngIf="tests.length > 0">
+        <div class="stat-card card-3d card-3d-interactive p-4">
           <div class="stat-value text-2xl font-bold text-primary">{{ getTotalAvailableTests() }}</div>
           <div class="stat-label text-sm text-secondary">Available Tests</div>
         </div>
-        <div class="stat-card card p-4">
+        <div class="stat-card card-3d card-3d-interactive p-4">
           <div class="stat-value text-2xl font-bold text-primary">{{ getTotalQuestions() }}</div>
           <div class="stat-label text-sm text-secondary">Total Questions</div>
         </div>
-        <div class="stat-card card p-4">
+        <div class="stat-card card-3d card-3d-interactive p-4">
           <div class="stat-value text-2xl font-bold text-primary">{{ getAverageTime() }}</div>
           <div class="stat-label text-sm text-secondary">Avg. Duration</div>
         </div>
       </div>
 
-      <!-- Tests Grid -->
-      <div class="tests-grid">
-        <div class="test-card card card-hover" 
-             *ngFor="let test of tests; trackBy: trackByTestId">
+      <!-- Tests Grid with 3D cards -->
+      <div class="tests-grid grid-3d grid-3d-2">
+        <div class="test-card question-card-3d" 
+             *ngFor="let test of getDisplayTests(); trackBy: trackByTestId; let i = index"
+             [class.search-result]="searchQuery"
+             [style.animation-delay.ms]="i * 100">
           
           <!-- Card Header -->
           <div class="card-header p-6 border-b border-color">
             <div class="flex justify-between items-start mb-3">
-              <h3 class="text-xl font-semibold text-primary">{{ test.title }}</h3>
-              <span class="test-badge">Quiz</span>
+              <div class="test-title-section">
+                <h3 class="text-xl font-semibold text-primary mb-1">
+                  <span [innerHTML]="highlightSearchTerm(test.title)"></span>
+                </h3>
+                <div class="creator-info flex items-center gap-2 text-sm">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  <span class="creator-name">Created by {{ test.createdByUserName || 'Unknown' }}</span>
+                </div>
+              </div>
+              <span class="test-badge depth-2" [ngClass]="getTestBadgeClass(test)">{{ getTestBadgeText(test) }}</span>
             </div>
             
             <div class="test-meta flex gap-4 text-sm text-secondary">
@@ -109,28 +110,28 @@
 
           <!-- Card Body -->
           <div class="card-body p-6">
-            <p class="text-secondary mb-6 line-height-relaxed">{{ test.description }}</p>
+            <p class="text-secondary mb-6 line-height-relaxed" [innerHTML]="highlightSearchTerm(test.description)"></p>
             
-            <button class="btn btn-primary btn-lg w-full" 
-                    [routerLink]="['/user/take-test', test.id]"
+            <button class="btn-3d btn-3d-primary w-full" 
+                    type="button"
                     (click)="takeTest(test.id)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
+              <span nz-icon nzType="play-circle" nzTheme="outline" class="mr-2"></span>
               Start Test
             </button>
           </div>
         </div>
       </div>
       
-      <!-- Pagination -->
-      <app-pagination
-        [total]="totalTests"
-        [pageSize]="pageSize"
-        [currentPage]="pageIndex"
-        (pageChange)="onPageChange($event)"
-        (pageSizeChange)="onPageSizeChange($event)">
-      </app-pagination>
+      <!-- Pagination with 3D enhancement -->
+      <div class="pagination-container card-3d p-4 mt-8">
+        <app-pagination
+          [total]="totalTests"
+          [pageSize]="pageSize"
+          [currentPage]="pageIndex"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)">
+        </app-pagination>
+      </div>
     </div>
   </div>
 </div>

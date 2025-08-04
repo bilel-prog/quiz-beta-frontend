@@ -1,37 +1,36 @@
 .question-form-container {
-  max-width: 600px;
-  margin: 50px auto;
+  max-width: 800px;
+  margin: 20px auto;
   padding: 30px;
   background-color: var(--surface-color);
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 
   h2 {
     text-align: center;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
     color: var(--primary-color);
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 600;
   }
 
   form {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 24px;
   }
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 
   label {
     display: block;
     font-weight: 600;
     color: var(--text-color);
-    margin-bottom: 8px;
-    font-size: 14px;
+    margin-bottom: 10px;
+    font-size: 15px;
 
-    // Highlight required fields with asterisk
     &::after {
       content: " *";
       color: var(--danger-color);
@@ -39,24 +38,42 @@
     }
   }
 
-  input[nz-input], nz-select {
+  input[nz-input], 
+  nz-select, 
+  textarea[nz-input],
+  nz-input-number {
     width: 100%;
-    padding: 10px 12px;
+    padding: 12px 14px;
     font-size: 14px;
     border: 2px solid var(--border-color);
-    border-radius: 6px;
-    transition: all 0.2s ease;
+    border-radius: 8px;
+    transition: all 0.3s ease;
     background-color: var(--input-background);
 
     &:focus {
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.15);
       outline: none;
     }
 
     &.ng-invalid.ng-touched {
       border-color: var(--danger-color);
-      box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2);
+      box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.15);
+    }
+  }
+
+  nz-radio-group {
+    display: flex;
+    gap: 20px;
+    padding: 12px 0;
+
+    label[nz-radio] {
+      font-size: 14px;
+      color: var(--text-color);
+      
+      &::after {
+        display: none; // Remove asterisk from radio labels
+      }
     }
   }
 }
@@ -64,57 +81,274 @@
 .error {
   color: var(--danger-color);
   font-size: 12px;
-  margin-top: 4px;
+  margin-top: 6px;
   display: flex;
   align-items: center;
   font-weight: 500;
 
   &::before {
     content: "⚠️";
-    margin-right: 4px;
+    margin-right: 6px;
     font-size: 14px;
   }
 }
 
 .help-text {
-  color: var(--warning-color);
-  font-size: 12px;
+  color: var(--info-color);
+  font-size: 13px;
   margin-top: 8px;
-  padding: 8px 12px;
-  background-color: rgba(255, 193, 7, 0.1);
-  border-radius: 4px;
-  border-left: 3px solid var(--warning-color);
-  font-weight: 500;
+  padding: 10px 14px;
+  background-color: rgba(24, 144, 255, 0.08);
+  border-radius: 6px;
+  border-left: 3px solid var(--info-color);
+  line-height: 1.4;
 }
 
+// Options Container for Multiple Choice
+.options-container {
+  .option-item {
+    margin-bottom: 12px;
+
+    .option-input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .option-input {
+        flex: 1;
+      }
+
+      .remove-option-btn {
+        min-width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        
+        &:hover:not(:disabled) {
+          background-color: rgba(255, 77, 79, 0.1);
+          color: var(--danger-color);
+        }
+      }
+    }
+  }
+
+  .add-option-btn {
+    width: 100%;
+    height: 40px;
+    border: 2px dashed var(--border-color);
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+      background-color: rgba(24, 144, 255, 0.05);
+    }
+  }
+}
+
+// Fill in the Blank Container
+.fill-blank-container {
+  .answer-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+
+    .answer-input {
+      flex: 1;
+    }
+
+    .remove-answer-btn {
+      min-width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      
+      &:hover:not(:disabled) {
+        background-color: rgba(255, 77, 79, 0.1);
+        color: var(--danger-color);
+      }
+    }
+  }
+
+  .add-answer-btn {
+    width: 100%;
+    height: 40px;
+    border: 2px dashed var(--border-color);
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+      background-color: rgba(24, 144, 255, 0.05);
+    }
+  }
+}
+
+// Matching Container
+.matching-container {
+  .matching-pair {
+    margin-bottom: 16px;
+
+    .pair-inputs {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .pair-input {
+        flex: 1;
+      }
+
+      .pair-connector {
+        font-size: 18px;
+        color: var(--primary-color);
+        font-weight: bold;
+        min-width: 24px;
+        text-align: center;
+      }
+
+      .remove-pair-btn {
+        min-width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        
+        &:hover:not(:disabled) {
+          background-color: rgba(255, 77, 79, 0.1);
+          color: var(--danger-color);
+        }
+      }
+    }
+
+    .pair-errors {
+      margin-top: 6px;
+      display: flex;
+      gap: 20px;
+
+      .error {
+        flex: 1;
+        margin-top: 0;
+      }
+    }
+  }
+
+  .add-pair-btn {
+    width: 100%;
+    height: 40px;
+    border: 2px dashed var(--border-color);
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+      background-color: rgba(24, 144, 255, 0.05);
+    }
+  }
+}
+
+// Sequence Container
+.sequence-container {
+  .sequence-item {
+    margin-bottom: 12px;
+
+    .sequence-input-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .sequence-number {
+        font-weight: 600;
+        color: var(--primary-color);
+        min-width: 28px;
+        font-size: 16px;
+      }
+
+      .sequence-input {
+        flex: 1;
+      }
+
+      .remove-sequence-btn {
+        min-width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        
+        &:hover:not(:disabled) {
+          background-color: rgba(255, 77, 79, 0.1);
+          color: var(--danger-color);
+        }
+      }
+    }
+  }
+
+  .add-sequence-btn {
+    width: 100%;
+    height: 40px;
+    border: 2px dashed var(--border-color);
+    background-color: transparent;
+    color: var(--text-secondary);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+      background-color: rgba(24, 144, 255, 0.05);
+    }
+  }
+}
+
+// Form Actions
 .form-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 30px;
+  gap: 16px;
+  margin-top: 40px;
   justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
 
   button {
-    min-width: 120px;
-    height: 40px;
-    border-radius: 6px;
+    min-width: 140px;
+    height: 44px;
+    border-radius: 8px;
     font-weight: 600;
     font-size: 14px;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 
     &[nzType="primary"] {
       background-color: var(--primary-color);
       border-color: var(--primary-color);
+      box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
 
       &:hover:not(:disabled) {
         background-color: var(--primary-hover);
         border-color: var(--primary-hover);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(24, 144, 255, 0.3);
       }
 
       &:disabled {
         opacity: 0.6;
         cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
       }
     }
 
@@ -123,22 +357,69 @@
       border-color: var(--border-color);
       background-color: transparent;
 
-      &:hover {
+      &:hover:not(:disabled) {
         border-color: var(--primary-color);
         color: var(--primary-color);
+        background-color: rgba(24, 144, 255, 0.05);
+        transform: translateY(-1px);
       }
     }
   }
 }
 
-// Dark mode compatibility
+// Responsive Design
+@media (max-width: 768px) {
+  .question-form-container {
+    margin: 10px;
+    padding: 20px;
+    max-width: none;
+  }
+
+  .matching-container .matching-pair .pair-inputs {
+    flex-direction: column;
+    gap: 8px;
+
+    .pair-connector {
+      transform: rotate(90deg);
+      font-size: 16px;
+    }
+  }
+
+  .form-actions {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+    }
+  }
+}
+
+// Dark Mode Support
 [data-theme="dark"] {
   .question-form-container {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
 
   .help-text {
-    background-color: rgba(255, 193, 7, 0.15);
+    background-color: rgba(24, 144, 255, 0.12);
+  }
+
+  .add-option-btn,
+  .add-answer-btn,
+  .add-pair-btn,
+  .add-sequence-btn {
+    &:hover {
+      background-color: rgba(24, 144, 255, 0.08);
+    }
+  }
+
+  .remove-option-btn,
+  .remove-answer-btn,
+  .remove-pair-btn,
+  .remove-sequence-btn {
+    &:hover:not(:disabled) {
+      background-color: rgba(255, 77, 79, 0.15);
+    }
   }
 }
 

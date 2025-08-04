@@ -1,42 +1,33 @@
 <div class="admin-dashboard-container">
-  <!-- Header Section -->
-  <div class="dashboard-header">
+  <!-- Page Title Section (simplified) -->
+  <div class="page-title-section">
     <div class="container">
-      <div class="header-content">
-        <div class="header-text">
-          <h1 class="page-title">Admin Dashboard</h1>
-          <p class="page-subtitle">Manage your tests and monitor quiz performance</p>
-        </div>
-        <div class="header-actions">
-          <button nz-button nzType="primary" routerLink="/admin/create-test">
-            <span nz-icon nzType="plus"></span>
-            Create Test
-          </button>
-          <button nz-button nzType="default" routerLink="/admin/view-test-results">
-            <span nz-icon nzType="bar-chart"></span>
-            View Results
-          </button>
-        </div>
+      <h1 class="page-title">Admin Dashboard</h1>
+      <p class="page-subtitle">Manage your tests and monitor quiz performance</p>
+      
+      <!-- Search Results Info -->
+      <div *ngIf="searchQuery && searchResults.length === 0 && !isSearching && hasSearched" class="search-no-results">
+        <p class="text-secondary">No tests found matching "{{ searchQuery }}"</p>
       </div>
     </div>
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="tests.length === 0" class="loading-section">
+  <div *ngIf="!loading && getDisplayTests().length === 0" class="loading-section">
     <div class="container">
       <div class="empty-state">
         <h3>No tests created yet</h3>
         <p>Start by creating your first test</p>
         <button nz-button nzType="primary" routerLink="/admin/create-test">
           <span nz-icon nzType="plus"></span>
-          Create Test
+          Create Your First Test
         </button>
       </div>
     </div>
   </div>
 
   <!-- Tests Grid -->
-  <div *ngIf="tests.length > 0" class="tests-section">
+  <div *ngIf="!loading && getDisplayTests().length > 0" class="tests-section">
     <div class="container">
       <!-- Stats Summary -->
       <div class="stats-grid">
@@ -57,25 +48,22 @@
       <!-- Tests Grid -->
       <div class="admin-tests-grid">
         <nz-card 
-          *ngFor="let test of tests" 
+          *ngFor="let test of getDisplayTests()" 
           class="test-card"
-          [nzTitle]="test.title"
-          [nzExtra]="cardActions"
+          [class.search-result]="searchQuery"
           [nzBordered]="true">
           
-          <ng-template #cardActions>
-            <div class="card-actions">
-              <button nz-button nzType="default" nzSize="small" routerLink="/admin/view-test/{{test.id}}" title="View Test">
-                <span nz-icon nzType="eye"></span>
-              </button>
-              <button nz-button nzType="primary" nzSize="small" routerLink="/admin/add-question/{{test.id}}" title="Add Question">
-                <span nz-icon nzType="plus"></span>
-              </button>
-            </div>
-          </ng-template>
+          <div class="card-header">
+            <h3 class="test-title" [innerHTML]="highlightSearchTerm(test.title)"></h3>
+            <p class="test-description" *ngIf="test.description" [innerHTML]="highlightSearchTerm(test.description)"></p>
+          </div>
 
           <div class="test-content">
             <div class="test-meta">
+              <div class="meta-item">
+                <span nz-icon nzType="user"></span>
+                <span class="creator-text">Created by: {{ test.createdByUserName || 'Unknown Creator' }}</span>
+              </div>
               <div class="meta-item">
                 <span nz-icon nzType="clock-circle"></span>
                 <span>Duration: {{ getFormattedTime(test.time) }}</span>
@@ -90,14 +78,25 @@
               <p>{{ test.description || 'No description available' }}</p>
             </div>
 
-            <div class="test-actions">
-              <button nz-button nzType="primary" routerLink="/admin/view-test/{{test.id}}">
+            <!-- Action Buttons at Bottom -->
+            <div class="test-actions-bottom">
+              <button nz-button nzType="default" nzSize="small" routerLink="/admin/view-test/{{test.id}}">
                 <span nz-icon nzType="eye"></span>
-                View Test
+                View Test Details
               </button>
-              <button nz-button nzType="default" routerLink="/admin/add-question/{{test.id}}">
+              <button nz-button nzType="default" nzSize="small" routerLink="/admin/edit-test/{{test.id}}">
+                <span nz-icon nzType="edit"></span>
+                Edit Test
+              </button>
+              <button nz-button nzType="primary" nzSize="small" routerLink="/admin/add-question/{{test.id}}">
                 <span nz-icon nzType="plus"></span>
-                Add Question
+                Add Questions
+              </button>
+              <button nz-button nzType="default" nzDanger nzSize="small" 
+                      (click)="confirmDeleteTest(test)"
+                      [nzLoading]="deletingTestIds.has(test.id)">
+                <span nz-icon nzType="delete"></span>
+                Delete Test
               </button>
             </div>
           </div>
@@ -115,3 +114,36 @@
     </div>
   </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<nz-modal
+  [(nzVisible)]="showDeleteModal"
+  nzTitle="Confirm Delete"
+  nzWidth="400px"
+  [nzFooter]="deleteModalFooter"
+  (nzOnCancel)="hideDeleteModal()">
+  
+  <ng-container *nzModalContent>
+    <div class="text-center">
+      <div class="mb-4">
+        <span nz-icon nzType="exclamation-circle" nzTheme="outline" 
+              style="font-size: 48px; color: #ff4d4f;"></span>
+      </div>
+      <h3 class="text-lg font-semibold mb-2">Delete Test</h3>
+      <p class="text-secondary mb-6">
+        Are you sure you want to delete "<strong>{{ testToDelete?.title }}</strong>"? 
+        <br><small *ngIf="testToDelete?.createdByUserName">Created by: {{ testToDelete.createdByUserName }}</small>
+        <br><strong>This action cannot be undone.</strong>
+      </p>
+    </div>
+  </ng-container>
+  
+  <ng-template #deleteModalFooter>
+    <button nz-button nzType="default" (click)="hideDeleteModal()">Cancel</button>
+    <button nz-button nzType="primary" nzDanger 
+            (click)="deleteTest()" 
+            [nzLoading]="isDeletingTest">
+      Delete Test
+    </button>
+  </ng-template>
+</nz-modal>

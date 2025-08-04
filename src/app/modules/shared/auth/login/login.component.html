@@ -1,40 +1,43 @@
-<div class="bg">
-  <div class="parent">
-    <div class="child">
+<div class="bg perspective">
+  <div class="parent container-3d">
+    <div class="child card-3d card-3d-elevated animate-fade-in-3d">
       <div class="imgDiv">
-        <h1 class="page-title">Login</h1>
+        <h1 class="page-title text-3xl font-bold text-primary mb-8 float-3d">Quiz Login</h1>
       </div>
 
      <form nz-form [formGroup]="validateForm" (ngSubmit)="submitForm()" class="login-form"> 
         <!-- Email Field -->
-        <nz-form-item>
+        <nz-form-item class="animate-slide-up-3d" style="animation-delay: 0.1s">
           <nz-form-control nzErrorTip="Please input your email!">
-            <input type="text" nz-input formControlName="email" placeholder="Email" />
+            <input type="text" nz-input formControlName="email" placeholder="Email" class="input-3d" />
           </nz-form-control>
         </nz-form-item>
 
         <!-- Password Field -->
-        <nz-form-item>
+        <nz-form-item class="animate-slide-up-3d" style="animation-delay: 0.2s">
           <nz-form-control nzErrorTip="Please input your Password!">
-            <input type="password" nz-input formControlName="password" placeholder="Password" />
+            <input type="password" nz-input formControlName="password" placeholder="Password" class="input-3d" />
           </nz-form-control>
         </nz-form-item>
 
         <!-- Submit Button -->
-        <div class="submit-section">
+        <div class="submit-section animate-slide-up-3d" style="animation-delay: 0.3s">
           <button
-            nz-button
-            class="login-form-button login-form-margin"
-            [nzType]="'primary'"
-            htmlType="submit"
+            type="submit"
+            class="btn-3d btn-3d-primary w-full py-3 px-6 text-lg"
+            [disabled]="!validateForm.valid"
           >
-            Login
+            <span nz-icon nzType="login" nzTheme="outline" class="mr-2"></span>
+            Login to Quiz Portal
           </button>
         </div>
 
         <!-- Register Link -->
-        <div class="signup-link">
-          Or <a (click)="goToR()" >Sign up now!</a>
+        <div class="signup-link animate-slide-up-3d" style="animation-delay: 0.4s">
+          <p class="text-center text-secondary">
+            Don't have an account? 
+            <a (click)="goToR()" class="text-primary font-semibold hover:underline cursor-pointer">Sign up now!</a>
+          </p>
         </div>
       </form>
     </div>

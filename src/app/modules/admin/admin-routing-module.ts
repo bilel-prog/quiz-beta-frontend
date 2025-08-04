@@ -5,14 +5,18 @@ import { CreateTestComponent } from './components/create-test/create-test.compon
 import { AddQuestionInTestComponent } from './components/add-question-in-test/add-question-in-test.component';
 import { ViewTestComponent } from './components/view-test-component/view-test-component';
 import { ViewTestResults } from './components/view-test-results/view-test-results';
+import { AdminEditTestComponent } from './components/edit-test/edit-test.component';
+import { UserManagementComponent } from './components/user-management/user-management.component';
 
 const routes: Routes = [
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   { path: 'dashboard', component: Dashboard },
   { path: 'create-test', component: CreateTestComponent },
+  { path: 'edit-test/:id', component: AdminEditTestComponent },
   { path: 'add-question/:id', component: AddQuestionInTestComponent },
   { path: 'view-test/:id', component: ViewTestComponent },
   { path: 'view-test-results', component: ViewTestResults },
+  { path: 'user-management', component: UserManagementComponent },
 ];
 
 @NgModule({

@@ -1,0 +1,196 @@
+<div class="edit-test-page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="header-text">
+          <button class="btn btn-default mr-4" (click)="goBack()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H6m0 0l7-7m-7 7l7 7"/>
+            </svg>
+            Back to My Tests
+          </button>
+          <h1 class="text-3xl font-bold text-primary mb-2">Edit Test</h1>
+          <p class="text-secondary" *ngIf="test">{{ test.title }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="container">
+      <div class="loading-card card p-8 text-center">
+        <div class="loading-spinner"></div>
+        <p class="text-secondary">Loading test details...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading && test" class="main-content">
+    <div class="container">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Test Details Form -->
+        <div class="lg:col-span-1">
+          <nz-card nzTitle="Test Information" class="h-fit">
+            <form [formGroup]="testForm" (ngSubmit)="updateTest()">
+              <div class="form-group mb-4">
+                <label class="form-label">Test Title</label>
+                <input 
+                  type="text" 
+                  class="form-control" 
+                  formControlName="title"
+                  placeholder="Enter test title">
+                <div *ngIf="testForm.get('title')?.invalid && testForm.get('title')?.touched" 
+                     class="text-danger text-sm mt-1">
+                  Test title is required (min 3 characters)
+                </div>
+              </div>
+
+              <div class="form-group mb-4">
+                <label class="form-label">Description</label>
+                <textarea 
+                  class="form-control" 
+                  formControlName="description"
+                  placeholder="Enter test description"
+                  rows="4">
+                </textarea>
+                <div *ngIf="testForm.get('description')?.invalid && testForm.get('description')?.touched" 
+                     class="text-danger text-sm mt-1">
+                  Description is required (min 10 characters)
+                </div>
+              </div>
+
+              <div class="form-group mb-6">
+                <label class="form-label">Time per Question (seconds)</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  formControlName="timePerQuestion"
+                  placeholder="60"
+                  min="10"
+                  max="300">
+                <div *ngIf="testForm.get('timePerQuestion')?.invalid && testForm.get('timePerQuestion')?.touched" 
+                     class="text-danger text-sm mt-1">
+                  Time must be between 10 and 300 seconds
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                class="btn btn-primary w-full"
+                [disabled]="testForm.invalid"
+                [class.loading]="isSaving">
+                <span *ngIf="!isSaving">Update Test Details</span>
+                <span *ngIf="isSaving">Updating...</span>
+              </button>
+            </form>
+          </nz-card>
+        </div>
+
+        <!-- Questions Section -->
+        <div class="lg:col-span-2">
+          <nz-card class="questions-section">
+            <div nz-card-header class="flex justify-between items-center">
+              <h3 class="text-lg font-semibold">Questions ({{ questions.length }})</h3>
+              <button class="btn btn-primary" (click)="addNewQuestion()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Question
+              </button>
+            </div>
+
+            <!-- Questions List -->
+            <div class="questions-list mt-6">
+              <div *ngFor="let question of questions; let i = index" 
+                   class="question-card mb-6 p-6 border border-gray-200 rounded-lg bg-gray-50">
+                
+                <div class="question-header mb-4">
+                  <div class="flex justify-between items-center">
+                    <h4 class="font-semibold text-gray-800">Question {{ i + 1 }}</h4>
+                    <button class="btn-icon btn-danger" (click)="removeQuestion(question, i)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3,6 5,6 21,6"/>
+                        <path d="M19,6V20a2,2,0,0,1-2-2H7a2,2,0,0,1-2-2V6M8,6V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2V6"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="question-content">
+                  <!-- Question Text Display -->
+                  <div class="mb-4">
+                    <h5 class="font-medium text-gray-700 mb-2">Question:</h5>
+                    <p class="text-gray-800 bg-white p-3 rounded border">{{ question.questionText }}</p>
+                  </div>
+
+                  <!-- Question Type -->
+                  <div class="mb-4">
+                    <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                      {{ getQuestionTypeLabel(question.questionType) }}
+                    </span>
+                  </div>
+
+                  <!-- Options Display (for multiple choice questions) -->
+                  <div *ngIf="isMultipleChoice(question.questionType) && hasMultipleChoiceData(question)" class="mb-4">
+                    <h6 class="font-medium text-gray-700 mb-2">Options:</h6>
+                    <div class="space-y-2">
+                      <div *ngFor="let option of getQuestionOptions(question); let optionIndex = index" 
+                           class="flex items-center gap-3 p-2 bg-white rounded border">
+                        <span class="font-semibold text-gray-600 min-w-6">
+                          {{ getOptionLabel(optionIndex) }}.
+                        </span>
+                        <span class="text-gray-800">{{ option }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Correct Answer Display -->
+                  <div *ngIf="getCorrectAnswers(question).length > 0" class="mb-4">
+                    <h6 class="font-medium text-gray-700 mb-2">Correct Answer(s):</h6>
+                    <div class="flex gap-2">
+                      <span *ngFor="let answer of getCorrectAnswers(question)" 
+                            class="inline-block px-2 py-1 bg-green-100 text-green-800 rounded text-sm font-medium">
+                        {{ answer }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Question Actions -->
+                  <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button class="btn btn-outline-primary btn-sm" (click)="editQuestion(question)">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty Questions State -->
+              <div *ngIf="questions.length === 0" 
+                   class="empty-questions text-center py-12 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mx-auto mb-4 text-gray-400">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <h3 class="text-lg font-semibold text-gray-600 mb-2">No questions added yet</h3>
+                <p class="text-gray-500 mb-4">Start building your test by adding questions</p>
+                <button class="btn btn-primary" (click)="addNewQuestion()">
+                  Add Your First Question
+                </button>
+              </div>
+            </div>
+          </nz-card>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
